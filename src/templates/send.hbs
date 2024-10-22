@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Your OTP Code</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 0;
+    }
+    .email-container {
+      background-color: #ffffff;
+      margin: 20px auto;
+      padding: 20px;
+      max-width: 600px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    .header {
+      background-color: #007bff;
+      padding: 10px;
+      border-radius: 8px 8px 0 0;
+      text-align: center;
+      color: #ffffff;
+    }
+    .content {
+      padding: 20px;
+    }
+    .otp {
+      background-color: #f8d7da;
+      color: #721c24;
+      padding: 10px;
+      border-radius: 5px;
+      font-size: 24px;
+      text-align: center;
+    }
+    .footer {
+      padding: 10px;
+      text-align: center;
+      font-size: 12px;
+      color: #777777;
+    }
+    img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="email-container">
+    <div class="header">
+      <h1>Mã đặt lại mật khẩu</h1>
+    </div>
+    <div class="content">
+      <p>Xin chào {{name}},</p>
+      <p>Chúng tôi rất vui mừng chào đón bạn. Dưới đây là mã OTP của bạn:</p>
+      <div class="otp">{{otp}}</div>
+      <p>Mã này sẽ hết hạn sau 10 phút.</p>
+      <img src="https://timo.vn/wp-content/uploads/OTP.jpg" alt="Welcome Image">
+    </div>
+    <div class="footer">
+      <p>Thank you!</p>
+    </div>
+  </div>
+</body>
+</html>
