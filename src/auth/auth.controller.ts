@@ -11,6 +11,7 @@ import { ResetPasswordDto } from './dto/reset-password.dto';
 import { TwilioService } from 'nestjs-twilio';
 import { SendOtpDto } from './dto/send-sms.dto';
 import { VerifyOtpDto } from './dto/reset-password-sms.dto';
+import { ApiTags } from '@nestjs/swagger';
 
 interface RequestWithUser extends Request {
     user: {
@@ -19,7 +20,7 @@ interface RequestWithUser extends Request {
         role:string
     }
 }
-
+@ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
     constructor (

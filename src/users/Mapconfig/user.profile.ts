@@ -7,7 +7,6 @@ import { UpdateUserDto } from "../dto/update-user.dto";
 import { map } from "rxjs";
 import { RegisterUserDto } from "../dto/register-user.dto";
 import { LoginDto } from "src/auth/dto/login.dto";
-import { CreatePhotoDto } from "../dto/create-photo.dto";
 
 @Injectable()
 export class UserProfile extends AutomapperProfile {

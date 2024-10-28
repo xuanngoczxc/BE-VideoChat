@@ -151,7 +151,6 @@ export class AuthService {
         return { message: 'Mã OTP đã được gửi đến email của bạn' };
       }
       
-
     async resetPassword(resetPasswordDto: ResetPasswordDto) {
         const { email, otp, newPassword } = resetPasswordDto;
         const isValidOTP = await this.usersService.verifyOTP(email, otp);

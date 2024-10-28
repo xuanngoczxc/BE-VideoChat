@@ -74,10 +74,10 @@ export class UsersService {
     currentPage: number;
   }> {
     const { page = 1, limit = 10, search } = paginationDto;
-    const queryBuilder = this.userRepository.createQueryBuilder('user')
-      .leftJoinAndSelect('user.photos','photos')
+    const queryBuilder = this.userRepository.createQueryBuilder('users')
+      .leftJoinAndSelect('users.thongTinCaNhan','thongTinCaNhan')
     if (search) {
-        queryBuilder.where('unaccent(user.name) ILIKE unaccent(:search)', { search: `%${search}%` });
+        queryBuilder.where('unaccent(users.fullName) ILIKE unaccent(:search)', { search: `%${search}%` });
     }
     const total = await queryBuilder.getCount();
     const users = await queryBuilder
@@ -93,11 +93,11 @@ export class UsersService {
     };
   }
 
-  async findSearchUsers(name: string): Promise<User[]> {
+  async findSearchUsers(fullName: string): Promise<User[]> {
     const users = await this.userRepository
-      .createQueryBuilder('user')
-      .leftJoinAndSelect('user.photos', 'photo')
-      .where('user.name = :name', {name})
+      .createQueryBuilder('users')
+      .leftJoinAndSelect('users.thongTinCaNhan', 'ThongTinCaNhan')
+      .where('unaccent(users.fullName) ILIKE unaccent(:fullName)', { fullName: `%${fullName}%` })
       .getMany();
     return users;
   }
@@ -109,11 +109,11 @@ export class UsersService {
     currentPage: number;
   }> {
     const { page = 1, limit = 10 } = paginationDto;
-    const queryBuilder = this.userRepository.createQueryBuilder('user')
-      .leftJoinAndSelect('user.photos','photos');
+    const queryBuilder = this.userRepository.createQueryBuilder('users')
+      .leftJoinAndSelect('users.thongTinCaNhan','thongTinCaNhan');
 
     if (search) {
-        queryBuilder.where('unaccent(user.name) ILIKE unaccent(:search)', { search: `%${search}%` });
+        queryBuilder.where('unaccent(users.fullName) ILIKE unaccent(:search)', { search: `%${search}%` });
     }
     const total = await queryBuilder.getCount();
     const users = await queryBuilder
@@ -129,10 +129,10 @@ export class UsersService {
     };
   }
 
-  async findOne(id: number): Promise<User> {
+  async findOne(fullName: string): Promise<User> {
       return await this.userRepository.findOne({
-        where: { id },
-        relations: ['photos'],
+        where: { fullName },
+        relations: ['thongTinCaNhan'],
       });
   }
 

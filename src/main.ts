@@ -65,7 +65,7 @@ async function bootstrap() {
     }));
     // Import IoAdapter if it's not already imported
     app.useWebSocketAdapter(new IoAdapter(app));
-    await app.listen(3000, '0.0.0.0');
+    await app.listen(5000, '0.0.0.0');
     console.log(`API docs are available at: ${await app.getUrl()}/api`);
 }
 bootstrap();

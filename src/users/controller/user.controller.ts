@@ -3,7 +3,7 @@ import { UsersService } from "../services/users.service";
 import { CreateUserDto } from "../dto/create-user.dto";
 import { PaginationDto } from "../dto/pagination.dto";
 import { User } from "../entity/user.entity";
-import { ApiQuery } from "@nestjs/swagger";
+import { ApiBody, ApiQuery, ApiTags } from "@nestjs/swagger";
 import { UpdateUserDto } from "../dto/update-user.dto";
 import { Roles } from "src/auth/decorators/roles.decorator";
 import { Role } from "src/auth/enums/rol.enum";
@@ -12,6 +12,7 @@ import { RolesGuard } from "src/auth/guard/roles.guard";
 import { InjectMapper, MapInterceptor } from "@automapper/nestjs";
 import { Mapper } from "@automapper/core";
 
+@ApiTags('users')
 @Controller('users')
 export class UserController {
     constructor(
@@ -20,8 +21,6 @@ export class UserController {
     ){}
 
     @Post()
-    @Roles(Role.Admin)
-    @UseGuards(AuthGuard, RolesGuard)
     async create(@Body() createUserDto: CreateUserDto) {
         return await this.userService.create(createUserDto)
     }
@@ -46,15 +45,15 @@ export class UserController {
         return result;
     }
 
-    @Get('name/:name')
-    async findUsers(@Param('name') name: string): Promise<User[]> {
-        return await this.userService.findSearchUsers(name);
+    @Get('Search')
+    async findUsers(@Param('fullName') fullName: string): Promise<User[]> {
+        return await this.userService.findSearchUsers(fullName);
     }
     
-    @Get('id/:id')
-    findOne(@Param('id') id: number) {
-        return this.userService.findOne(id);
-    }
+    // @Get('search')
+    // findOne(@Param('name') fullName:string) {
+    //     return this.userService.findOne(fullName);
+    // }
 
     // @Put(':id')
     // @Roles(Role.Admin)
@@ -73,6 +72,4 @@ export class UserController {
     // remove(@Param('id') id: string) {
     //     return this.userService.remove(+id);
     // }
-
-
 }
