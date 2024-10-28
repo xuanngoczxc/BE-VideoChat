@@ -12,6 +12,7 @@ import { TwilioService } from 'nestjs-twilio';
 import { SendOtpDto } from './dto/send-sms.dto';
 import { VerifyOtpDto } from './dto/reset-password-sms.dto';
 import { ApiTags } from '@nestjs/swagger';
+import { VerifyOTPDto } from './dto/VerifyOTP.dto';
 
 interface RequestWithUser extends Request {
     user: {
@@ -55,6 +56,11 @@ export class AuthController {
         return this.authService.changePassword(req.user.email, changePasswordDto);
     }
 
+    @Post('verify-otp')
+    async verifyOTP(@Body() verifyOTPDto: VerifyOTPDto, otp: string) {
+        return this.authService.verifyOTP(verifyOTPDto, otp);
+    }
+
     //email
 
     @Post('reset-password')
@@ -87,3 +93,4 @@ export class AuthController {
 
 
 }
+

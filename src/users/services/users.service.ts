@@ -93,14 +93,14 @@ export class UsersService {
     };
   }
 
-  async findSearchUsers(fullName: string): Promise<User[]> {
-    const users = await this.userRepository
-      .createQueryBuilder('users')
-      .leftJoinAndSelect('users.thongTinCaNhan', 'ThongTinCaNhan')
-      .where('unaccent(users.fullName) ILIKE unaccent(:fullName)', { fullName: `%${fullName}%` })
-      .getMany();
-    return users;
-  }
+  // async findSearchUsers(fullName: string): Promise<User[]> {
+  //   const users = await this.userRepository
+  //     .createQueryBuilder('users')
+  //     .leftJoinAndSelect('users.thongTinCaNhan', 'ThongTinCaNhan')
+  //     .where('unaccent(users.fullName) ILIKE unaccent(:fullName)', { fullName: `%${fullName}%` })
+  //     .getMany();
+  //   return users;
+  // }
 
   async findAll(paginationDto: PaginationDto, search?: string): Promise<{
     users: User[];
@@ -129,12 +129,12 @@ export class UsersService {
     };
   }
 
-  async findOne(fullName: string): Promise<User> {
-      return await this.userRepository.findOne({
-        where: { fullName },
-        relations: ['thongTinCaNhan'],
-      });
-  }
+  // async findOne(fullName: string): Promise<User> {
+  //     return await this.userRepository.findOne({
+  //       where: { fullName },
+  //       relations: ['thongTinCaNhan'],
+  //     });
+  // }
 
   // async update(id: number, UpdateProfileDto, profileUpdates?: ThongTinCaNhan[]): Promise<User> {
   //   await this.userRepository.update(id, UpdateProfileDto);

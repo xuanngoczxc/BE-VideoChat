@@ -25,7 +25,7 @@ export class UserController {
         return await this.userService.create(createUserDto)
     }
 
-    @Get()
+    @Get('search')
     @UsePipes(new ValidationPipe({ transform: true }))
     async findAll(
         @Query() paginationDto: PaginationDto,
@@ -45,10 +45,10 @@ export class UserController {
         return result;
     }
 
-    @Get('Search')
-    async findUsers(@Param('fullName') fullName: string): Promise<User[]> {
-        return await this.userService.findSearchUsers(fullName);
-    }
+    // @Get('Search')
+    // async findUsers(@Param('fullName') fullName: string): Promise<User[]> {
+    //     return await this.userService.findSearchUsers(fullName);
+    // }
     
     // @Get('search')
     // findOne(@Param('name') fullName:string) {

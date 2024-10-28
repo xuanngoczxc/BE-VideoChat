@@ -43,17 +43,17 @@ async function bootstrap() {
   });
 
   app.enableCors({
-    origin: '*', // Cho phép tất cả các nguồn
-    methods: 'GET,POST,PUT,DELETE', // Cho phép các phương thức HTTP này
-    credentials: true, // Cho phép gửi cookie nếu cần thiết
-    preflightContinue: true, 
+    origin: 'http://localhost:5000',  // Cho phép frontend ở địa chỉ này
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    credentials: true, // Nếu bạn muốn hỗ trợ cookie
   });
 
   const config = new DocumentBuilder()
-    .setTitle('User example')
-    .setDescription('The User API description')
-    .setVersion('1.0')
+    .setTitle('Video chat example')
+    .setDescription('API of online learning application')
+    .setVersion('2.0')
     .addTag('users')
+    .addBearerAuth({ type: 'http', scheme: 'bearer', bearerFormat: 'JWT', in: 'header' }, 'JWT-auth')
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);

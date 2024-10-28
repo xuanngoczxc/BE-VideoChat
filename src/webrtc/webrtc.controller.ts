@@ -1,6 +1,7 @@
 import { Controller, Get, Post, Body, Param } from '@nestjs/common';
 import { WebRTCService } from './webrtc.service';
-
+import { ApiTags } from '@nestjs/swagger';
+@ApiTags('video-users')
 @Controller('webrtc')
 export class WebRTCController {
   constructor(private readonly webrtcService: WebRTCService) {}

@@ -14,6 +14,7 @@ import { SendOtpDto } from './dto/send-sms.dto';
 import { VerifyOtpDto } from './dto/reset-password-sms.dto';
 import { join } from 'path';
 import * as crypto from 'crypto';
+import { VerifyOTPDto } from './dto/VerifyOTP.dto';
 
 @Injectable()
 export class AuthService {
@@ -39,13 +40,12 @@ export class AuthService {
             throw new BadRequestException('Tên đăng nhập đã tồn tại');
         }
     
-        // Call registerUser method which will handle password hashing and other checks
         const user = await this.usersService.registerUser({
             loginName,
             fullName,
             email,
             password,
-            rePassword, // plain rePassword is passed for matching
+            rePassword,
         });
     
         return {
@@ -149,8 +149,18 @@ export class AuthService {
         await this.example(email, otp, user.loginName);
       
         return { message: 'Mã OTP đã được gửi đến email của bạn' };
-      }
-      
+    }
+
+    async verifyOTP(verifyOTPDto: VerifyOTPDto, email: string) {
+        const { otp } = verifyOTPDto;
+        const isValidOTP = await this.usersService.verifyOTP(email, otp);
+        if (!isValidOTP) {
+            throw new BadRequestException('Mã OTP không hợp lệ hoặc đã hết hạn');
+        }
+        
+        return { message: 'OTP xác thực thành công' };
+    }
+    
     async resetPassword(resetPasswordDto: ResetPasswordDto) {
         const { email, otp, newPassword } = resetPasswordDto;
         const isValidOTP = await this.usersService.verifyOTP(email, otp);
