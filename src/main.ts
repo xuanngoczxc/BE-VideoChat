@@ -43,7 +43,7 @@ async function bootstrap() {
   });
 
   app.enableCors({
-    origin: 'http://localhost:5000',  // Cho phép frontend ở địa chỉ này
+    origin: 'http://localhost:3000',  // Cho phép frontend ở địa chỉ này
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true, // Nếu bạn muốn hỗ trợ cookie
   });
