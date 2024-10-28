@@ -22,7 +22,6 @@ import { LopHoc } from './users/entity/class.entity';
 import { LichSuCuocGoi } from './users/entity/history.entity';
 import { ThongTinCaNhan } from './profile/profile.entity';
 import { DiemDanh } from './users/entity/rollcall.entity';
-import { OptionsMiddleware } from './middleware/options.middleware';
 
 @Module({
   imports: [
@@ -80,6 +79,6 @@ import { OptionsMiddleware } from './middleware/options.middleware';
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(OptionsMiddleware).forRoutes('*');
+    consumer.apply(RequestLoggerMiddleware).forRoutes('*');
   }
 }
