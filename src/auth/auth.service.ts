@@ -1,13 +1,12 @@
 import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { RegisterDto } from './dto/register.dto';
-import { UsersService } from 'src/users/services/users.service';
+import { UsersService } from 'src/users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import { LoginDto } from './dto/login.dto';
 import * as bcrypt from 'bcrypt'
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
-import { UpdateUserDto } from 'src/users/dto/update-user.dto';
 import { MailerService } from '@nestjs-modules/mailer';
 import { TwilioService } from 'nestjs-twilio';
 import { SendOtpDto } from './dto/send-sms.dto';
@@ -15,6 +14,13 @@ import { VerifyOtpDto } from './dto/reset-password-sms.dto';
 import { join } from 'path';
 import * as crypto from 'crypto';
 import { VerifyOTPDto } from './dto/VerifyOTP.dto';
+import { jwtConstants } from './constants/jwt.constant';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { User } from 'src/users/entity/user.entity';
+import { ThongTinCaNhan } from 'src/users/entity/profile.entity';
+import { UpdateProfileDto } from 'src/users/dto/update-user.dto';
+import { Role } from './enums/rol.enum';
 
 @Injectable()
 export class AuthService {
@@ -23,7 +29,11 @@ export class AuthService {
         private readonly usersService: UsersService,
         private readonly jwtService: JwtService,
         private readonly mailerService: MailerService,
-        private readonly twilioService: TwilioService
+        private readonly twilioService: TwilioService,
+        @InjectRepository(User)
+        private usersRepository: Repository<User>,
+        @InjectRepository(ThongTinCaNhan)
+        private readonly profileRepository: Repository<ThongTinCaNhan>
     ){}
 
     async register(registerDto: RegisterDto) {
@@ -35,7 +45,7 @@ export class AuthService {
             throw new BadRequestException('Email người dùng đã tồn tại');
         }
 
-        const checkloginName = await this.usersService.findOneByLoginName(loginName);
+        const checkloginName = await this.usersService.findOneByLoginNameRegister(loginName);
         if (checkloginName) {
             throw new BadRequestException('Tên đăng nhập đã tồn tại');
         }
@@ -54,7 +64,6 @@ export class AuthService {
         };
     }
     
-
     async login({loginName, password}: LoginDto) {
         const user = await this.usersService.findOneByLoginName(loginName);
         if(!user) {
@@ -74,10 +83,12 @@ export class AuthService {
 
         const payload = { loginName: user.loginName, id: user.id, role: user.role};
         const accessToken = await this.jwtService.signAsync(payload,{
+            secret: jwtConstants.secret,
             expiresIn: '2m'
         });
 
         const refreshToken = await this.jwtService.signAsync(payload,{
+            secret: jwtConstants.secret,
             expiresIn: '10m'
         });
 
@@ -87,52 +98,49 @@ export class AuthService {
         };
     }
 
-    async refresh(refreshToken: string) {
-        try {
-            const payload = this.jwtService.verify(refreshToken);
-            const { email, id } = payload;
-    
-            const newPayload = { email, id };
-            const newAccessToken = await this.jwtService.signAsync(newPayload, { expiresIn: '2m' });
-            const newRefreshToken = await this.jwtService.signAsync(newPayload, { expiresIn: '10m' });
+    async profile(user: { loginName: string }) {
+        const foundUser = await this.usersService.findOne({
+            where: { loginName: user.loginName },
+            relations: ['thongTinCaNhan']
+        });
 
-            return {
-                access_token: newAccessToken,
-                refresh_token: newRefreshToken,
-            };
-        } catch (e) {
-            throw new UnauthorizedException('Invalid refresh token');
+        if (!foundUser) {
+            throw new UnauthorizedException('Người dùng không tồn tại.');
         }
+
+        const personalInfo = foundUser.thongTinCaNhan;
+        
+        return {
+            id: foundUser.id,
+            email: foundUser.email,
+            role: foundUser.role,
+            fullName: foundUser.fullName,
+            loginName: foundUser.loginName,
+            ngaySinh: personalInfo?.NgaySinh,
+            gioiTinh: personalInfo?.GioiTinh,
+            diaChi: personalInfo?.DiaChi,
+            soDienThoai: personalInfo?.SoDienThoai,
+            anhDaiDien: personalInfo?.AnhDaiDien,
+        };
     }
 
-    async changePassword(userEmail: string, changePasswordDto: ChangePasswordDto) {
+    async changePassword(changePasswordDto: ChangePasswordDto, userId: number) {
         const { oldPassword, newPassword } = changePasswordDto;
-        const user = await this.usersService.findOneByEmail(userEmail);
+        const user = await this.usersService.findById(userId);
+    
         if (!user) {
-            throw new NotFoundException('Người dùng không tồn tại');
+          throw new UnauthorizedException('User not found');
         }
-        let isCurrentPasswordValid = false;
-
-        if (user.password.startsWith('$2b$')) {
-            isCurrentPasswordValid = await bcrypt.compare(oldPassword, user.password);
-        } else {
-            isCurrentPasswordValid = oldPassword === user.password;
+    
+        const isPasswordValid = await bcrypt.compare(oldPassword, user.password);
+        if (!isPasswordValid) {
+          throw new UnauthorizedException('Mật khẩu cũ không đúng');
         }
-
-        if (!isCurrentPasswordValid) {
-            throw new UnauthorizedException('Mật khẩu hiện tại không đúng');
-        }
-
-        const hashedNewPassword = await bcrypt.hash(newPassword, 10);
-
-        const updateUserDto: UpdateUserDto = {
-            loginName: user.loginName,
-            email: user.email,
-            password: hashedNewPassword
-        }
-        await this.usersService.update(user.id, updateUserDto);
-        return { message: 'Đổi mật khẩu thành công' };
-    }
+    
+        user.password = await bcrypt.hash(newPassword, 10);
+        await this.usersService.update(user.id, user);
+        return { message: 'Mật khẩu đã được cập nhật thành công' };
+      }
 
     async forgotPassword(forgotPasswordDto: ForgotPasswordDto) {
         const { email } = forgotPasswordDto;
@@ -174,10 +182,6 @@ export class AuthService {
 
         return { message: 'Đặt lại mật khẩu thành công' };
     }
-    
-    // private generateOTP(): string {
-    //     return Math.floor(100000 + Math.random() * 900000).toString();
-    // }
 
     private generateOTP(): string {
         return crypto.randomInt(100000, 1000000).toString();
@@ -190,9 +194,9 @@ export class AuthService {
             from: `"NestJS" <xuanngoczxc@gmail.com>`,
             subject: 'Your OTP Code',
             template: './send',
-            context: {
-                name, otp
-            }
+            // context: {
+            //     name, otp
+            // }
           });
           console.log('OTP email sent successfully');
         } catch (error) {
@@ -247,8 +251,4 @@ export class AuthService {
         return { message: 'Đặt lại mật khẩu thành công' };
     }
     
-    async profile({ email, id, role}: {email: string, id: number, role: string}) {
-        return await this.usersService.findOneByEmail(email);
-    }
-
 }

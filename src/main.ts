@@ -7,6 +7,7 @@ import { WinstonModule } from 'nest-winston';
 import { format, transports } from 'winston';
 import * as dotenv from 'dotenv';
 import { IoAdapter } from '@nestjs/platform-socket.io';
+import { AuthGuard } from './auth/guard/auth.guard';
 
 async function bootstrap() {
   dotenv.config();
@@ -46,23 +47,24 @@ async function bootstrap() {
     origin: '*',  // Cho phép frontend ở địa chỉ này
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true, // Nếu bạn muốn hỗ trợ cookie
+    allowedHeaders: ['Authorization', 'Content-Type']
   });
 
   const config = new DocumentBuilder()
-    .setTitle('Video chat example')
-    .setDescription('API of online learning application')
-    .setVersion('2.0')
-    .addTag('users')
-    .addBearerAuth({ type: 'http', scheme: 'bearer', bearerFormat: 'JWT', in: 'header' }, 'JWT-auth')
-    .build();
+  .setTitle('Video chat example')
+  .setDescription('API of online learning application')
+  .setVersion('2.0')
+  .addBearerAuth()
+  .build();
+
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
-  app.useGlobalPipes(new ValidationPipe(
-    {
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      transform: true
-    }));
+  app.useGlobalPipes(new ValidationPipe({
+    whitelist: true, // loại bỏ các trường không được định nghĩa
+    forbidNonWhitelisted: true, // ném lỗi nếu có trường không được định nghĩa
+    transform: true, // tự động chuyển đổi kiểu
+  }));
+
     // Import IoAdapter if it's not already imported
     app.useWebSocketAdapter(new IoAdapter(app));
     await app.listen(5000, '0.0.0.0');

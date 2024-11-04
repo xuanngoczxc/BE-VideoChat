@@ -1,7 +1,7 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { UsersModule } from './users/module/users.module';
+import { UsersModule } from './users/users.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './users/entity/user.entity';
 import { AuthModule } from './auth/auth.module';
@@ -20,7 +20,7 @@ import { OtpService } from './otp/otp.service';
 import { WebRTCModule } from './webrtc/webrtc.module';
 import { LopHoc } from './users/entity/class.entity';
 import { LichSuCuocGoi } from './users/entity/history.entity';
-import { ThongTinCaNhan } from './profile/profile.entity';
+import { ThongTinCaNhan } from './users/entity/profile.entity';
 import { DiemDanh } from './users/entity/rollcall.entity';
 
 @Module({

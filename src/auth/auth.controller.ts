@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Patch, Post, Put, Req, UseGuards, ValidationPipe } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, NotFoundException, Patch, Post, Put, Req, UseGuards, ValidationPipe } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
@@ -11,21 +11,20 @@ import { ResetPasswordDto } from './dto/reset-password.dto';
 import { TwilioService } from 'nestjs-twilio';
 import { SendOtpDto } from './dto/send-sms.dto';
 import { VerifyOtpDto } from './dto/reset-password-sms.dto';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { VerifyOTPDto } from './dto/VerifyOTP.dto';
+import { RolesGuard } from './guard/roles.guard';
+import { Roles } from './decorators/roles.decorator';
+import { Role } from './enums/rol.enum';
+import { UpdateProfileDto } from 'src/users/dto/update-user.dto';
+import { UsersService } from 'src/users/users.service';
 
-interface RequestWithUser extends Request {
-    user: {
-        email: string;
-        id: number;
-        role:string
-    }
-}
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
     constructor (
         private readonly authService: AuthService,
+        private readonly usersService: UsersService,
     ){}
 
     @Post('register')
@@ -39,21 +38,19 @@ export class AuthController {
         return this.authService.login(loginDto);
     }
 
+    @UseGuards(AuthGuard)
     @Get('profile')
-    // @UseGuards(AuthGuard)
-    profile(@Req() req: RequestWithUser ) { 
-        return this.authService.profile(req.user)
+    @ApiBearerAuth()
+    async getProfile(@Req() request: Request) {
+        const user = request['user'] as { loginName: string };
+        return this.authService.profile(user);
     }
 
-    @Post('refresh')
-    async refresh(@Body() refreshTokenDto: RefreshTokenDto) {
-        return this.authService.refresh(refreshTokenDto.refreshToken);
-    }
-
-    // @UseGuards(AuthGuard)
-    @Patch('changepass')
-    async changePassword(@Req() req, @Body() changePasswordDto: ChangePasswordDto) {
-        return this.authService.changePassword(req.user.email, changePasswordDto);
+    @UseGuards(AuthGuard)
+    @Post('change-password')
+    @ApiBearerAuth()
+    async changePassword(@Body() changePasswordDto: ChangePasswordDto, @Req() req) {
+        return this.authService.changePassword(changePasswordDto, req.user.id);
     }
 
     @Post('verify-otp')

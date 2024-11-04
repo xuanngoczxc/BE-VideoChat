@@ -3,7 +3,7 @@ import { Role } from "src/auth/enums/rol.enum";
 import { AutoMap } from "@automapper/classes";
 import { DiemDanh } from "./rollcall.entity";
 import { LopHoc } from "./class.entity";
-import { ThongTinCaNhan } from "../../profile/profile.entity";
+import { ThongTinCaNhan } from "./profile.entity";
 
 @Entity()
 export class User {
@@ -39,17 +39,12 @@ export class User {
     role: Role;
 
     @Column({ nullable: true })
-    @AutoMap()
-    refreshToken: string;
-
-    @Column({ nullable: true })
     otp: string;
 
     @Column({ type: 'timestamp', nullable: true })
     otpExpires: Date;
 
     @OneToOne(() => ThongTinCaNhan, thongTinCaNhan => thongTinCaNhan.users)
-    @JoinColumn({ name: 'Email' })
     thongTinCaNhan: ThongTinCaNhan;
 
     @OneToMany(() => LopHoc, lopHoc => lopHoc.users)

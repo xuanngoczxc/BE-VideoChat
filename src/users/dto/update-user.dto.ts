@@ -1,17 +1,23 @@
-import { AutoMap } from '@automapper/classes';
-import { IsOptional, IsString, IsNumber, IsNotEmpty } from 'class-validator';
+import { IsString, IsDate, IsOptional } from 'class-validator';
 
-export class UpdateUserDto {
-  @IsOptional()
-  @IsString()
-  @AutoMap()
-  readonly loginName: string;
+export class UpdateProfileDto {
+    @IsOptional()
+    @IsString()
+    NgaySinh?: Date;
 
-  @IsNotEmpty()
-  @AutoMap()
-  readonly email: string;
+    @IsOptional()
+    @IsString()
+    GioiTinh?: string;
 
-  @IsNotEmpty()
-  @AutoMap()
-  readonly password: string;
+    @IsOptional()
+    @IsString()
+    DiaChi?: string;
+
+    @IsOptional()
+    @IsString()
+    SoDienThoai?: string;
+
+    @IsOptional()
+    @IsString()
+    AnhDaiDien?: string;
 }

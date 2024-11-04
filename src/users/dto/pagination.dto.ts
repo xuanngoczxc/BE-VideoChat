@@ -1,19 +1,19 @@
-import { AutoMap } from "@automapper/classes";
-import { Type } from "class-transformer";
-import { IsInt, IsOptional, IsPositive, IsString, Min } from "class-validator";
+import { IsOptional, IsNumber, Min, IsString } from 'class-validator';
+import { Transform, Type } from 'class-transformer';
 
 export class PaginationDto {
-
     @IsOptional()
-    @IsPositive()
-    @Type(() => Number)
-    page?: number;
-
-    @IsOptional()
+    @Transform(({ value }) => parseInt(value))
+    @IsNumber()
     @Min(1)
-    @Type(() => Number)
-    limit?: number;
-    
+    page?: number = 1;
+
+    @IsOptional()
+    @Transform(({ value }) => parseInt(value))
+    @IsNumber()
+    @Min(1)
+    limit?: number = 10;
+
     @IsOptional()
     @IsString()
     search?: string;
