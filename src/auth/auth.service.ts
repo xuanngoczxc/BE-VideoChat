@@ -21,6 +21,7 @@ import { User } from 'src/users/entity/user.entity';
 import { ThongTinCaNhan } from 'src/users/entity/profile.entity';
 import { UpdateProfileDto } from 'src/users/dto/update-user.dto';
 import { Role } from './enums/rol.enum';
+import * as fs from 'fs';
 
 @Injectable()
 export class AuthService {
@@ -30,10 +31,6 @@ export class AuthService {
         private readonly jwtService: JwtService,
         private readonly mailerService: MailerService,
         private readonly twilioService: TwilioService,
-        @InjectRepository(User)
-        private usersRepository: Repository<User>,
-        @InjectRepository(ThongTinCaNhan)
-        private readonly profileRepository: Repository<ThongTinCaNhan>
     ){}
 
     async register(registerDto: RegisterDto) {
@@ -142,21 +139,21 @@ export class AuthService {
         return { message: 'Mật khẩu đã được cập nhật thành công' };
       }
 
-    async forgotPassword(forgotPasswordDto: ForgotPasswordDto) {
+      async forgotPassword(forgotPasswordDto: ForgotPasswordDto) {
         const { email } = forgotPasswordDto;
-        const user = await this.usersService.findOneByEmail(email);
+        const user = await this.usersService.findOneByEmail(email);  // Kiểm tra người dùng có tồn tại không
         if (!user) {
-          throw new NotFoundException('Người dùng không tồn tại');
+            throw new NotFoundException('Người dùng không tồn tại');
         }
-      
-        const otp = this.generateOTP();
-        const expiresIn = 10 * 60 * 1000;
-        const expiresAt = new Date(Date.now() + expiresIn);
-      
-        await this.usersService.saveOTP(email, otp, expiresAt);
-        await this.example(email, otp, user.loginName);
-      
-        return { message: 'Mã OTP đã được gửi đến email của bạn' };
+    
+        const otp = this.generateOTP();  // Tạo OTP
+        const expiresIn = 10 * 60 * 1000;  // OTP hết hạn sau 10 phút
+        const expiresAt = new Date(Date.now() + expiresIn);  // Thời gian OTP hết hạn
+    
+        await this.usersService.saveOTP(email, otp, expiresAt);  // Lưu OTP vào cơ sở dữ liệu hoặc cache
+        await this.example(email, otp, user.loginName);  // Gửi email chứa OTP
+    
+        return { message: 'Mã OTP đã được gửi đến email của bạn', otp };  // Trả về OTP cho frontend nếu cần
     }
 
     async verifyOTP(verifyOTPDto: VerifyOTPDto, email: string) {
@@ -194,9 +191,9 @@ export class AuthService {
             from: `"NestJS" <xuanngoczxc@gmail.com>`,
             subject: 'Your OTP Code',
             template: './send',
-            // context: {
-            //     name, otp
-            // }
+            context: {
+                name, otp
+            }
           });
           console.log('OTP email sent successfully');
         } catch (error) {
