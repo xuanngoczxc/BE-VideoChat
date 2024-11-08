@@ -116,6 +116,17 @@ export class UsersService {
     await this.userRepository.update({ email }, { otp, otpExpires: expiresAt });
   }
 
+  // async verifyOTP(email: string, otp: string): Promise<boolean> {
+  //   const user = await this.userRepository.findOne({ where: { email } });
+  //   if (!user || !user.otp || !user.otpExpires) {
+  //     return false;
+  //   }
+  //   if (user.otp !== otp || user.otpExpires < new Date()) {
+  //     return false;
+  //   }
+  //   return true;
+  // }
+
   async verifyOTP(email: string, otp: string): Promise<boolean> {
     const user = await this.userRepository.findOne({ where: { email } });
     if (!user || !user.otp || !user.otpExpires) {
@@ -157,9 +168,9 @@ export class UsersService {
     return this.userRepository.findOne({ where: { phoneNumber } });
   }
 
-  async updatePassword(loginName: string, newPassword: string): Promise<void> {
-    await this.userRepository.update({ loginName }, { password: newPassword });
-  }
+  // async updatePassword(loginName: string, newPassword: string): Promise<void> {
+  //   await this.userRepository.update({ loginName }, { password: newPassword });
+  // }
 
   async saveOTPSMS(phoneNumber: string, otp: string, expiresAt: Date): Promise<void> {
     await this.userRepository.update({ phoneNumber }, { otp, otpExpires: expiresAt });
@@ -181,5 +192,14 @@ export class UsersService {
     await this.userRepository.update(id, user);
     return this.findById(id);
   }
+
+  async findByEmail(email: string): Promise<User | undefined> {
+    return this.userRepository.findOne({ where: { email } });
+}
+
+// Cập nhật mật khẩu người dùng
+async updatePassword(email: string, newPassword: string): Promise<void> {
+    await this.userRepository.update({ email }, { password: newPassword });
+}
 
 }

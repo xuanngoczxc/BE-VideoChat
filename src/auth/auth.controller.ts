@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, NotFoundException, Patch, Post, Put, Req, UseGuards, ValidationPipe } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, NotFoundException, Param, ParseIntPipe, Patch, Post, Put, Req, UseGuards, ValidationPipe } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
@@ -18,6 +18,7 @@ import { Roles } from './decorators/roles.decorator';
 import { Role } from './enums/rol.enum';
 import { UpdateProfileDto } from 'src/users/dto/update-user.dto';
 import { UsersService } from 'src/users/users.service';
+import { UserDto } from 'src/users/dto/user.dto';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -53,16 +54,22 @@ export class AuthController {
         return this.authService.changePassword(changePasswordDto, req.user.id);
     }
 
-    @Post('verify-otp')
+    @Post('verify-otp-email')
+    @ApiBearerAuth()
     async verifyOTP(@Body() verifyOTPDto: VerifyOTPDto, otp: string) {
         return this.authService.verifyOTP(verifyOTPDto, otp);
     }
 
     //email
 
-    @Post('reset-password')
-    async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
-        return this.authService.resetPassword(resetPasswordDto);
+    // @Post('reset-password')
+    // async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
+    //     return this.authService.resetPassword(resetPasswordDto);
+    // }
+
+    @Post('reset-password/:email')
+    async resetPassword(@Param('email') email: string, @Body() resetPasswordDto: ResetPasswordDto) {
+        return this.authService.resetPassword(email, resetPasswordDto);
     }
 
     @Post('forgot-password')
@@ -83,11 +90,10 @@ export class AuthController {
         return this.authService.sendSMS(sendOtpDto);
     }
 
-    @Post('verify-otp')
+    @Post('verify-otp-phone')
     async verifyOtp(@Body() verifyOtpDto: VerifyOtpDto): Promise<{ message: string }> {
         return this.authService.verifyOtp(verifyOtpDto);
     }
-
 
 }
 

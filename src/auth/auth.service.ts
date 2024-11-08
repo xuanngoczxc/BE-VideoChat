@@ -139,20 +139,20 @@ export class AuthService {
         return { message: 'Mật khẩu đã được cập nhật thành công' };
       }
 
-      async forgotPassword(forgotPasswordDto: ForgotPasswordDto) {
+    async forgotPassword(forgotPasswordDto: ForgotPasswordDto) {
         const { email } = forgotPasswordDto;
         const user = await this.usersService.findOneByEmail(email);  // Kiểm tra người dùng có tồn tại không
         if (!user) {
             throw new NotFoundException('Người dùng không tồn tại');
         }
-    
+
         const otp = this.generateOTP();  // Tạo OTP
         const expiresIn = 10 * 60 * 1000;  // OTP hết hạn sau 10 phút
         const expiresAt = new Date(Date.now() + expiresIn);  // Thời gian OTP hết hạn
-    
+
         await this.usersService.saveOTP(email, otp, expiresAt);  // Lưu OTP vào cơ sở dữ liệu hoặc cache
         await this.example(email, otp, user.loginName);  // Gửi email chứa OTP
-    
+
         return { message: 'Mã OTP đã được gửi đến email của bạn', otp };  // Trả về OTP cho frontend nếu cần
     }
 
@@ -162,23 +162,39 @@ export class AuthService {
         if (!isValidOTP) {
             throw new BadRequestException('Mã OTP không hợp lệ hoặc đã hết hạn');
         }
-        
         return { message: 'OTP xác thực thành công' };
     }
     
-    async resetPassword(resetPasswordDto: ResetPasswordDto) {
-        const { email, otp, newPassword } = resetPasswordDto;
-        const isValidOTP = await this.usersService.verifyOTP(email, otp);
-        if (!isValidOTP) {
-            throw new BadRequestException('Mã OTP không hợp lệ hoặc đã hết hạn');
+    async resetPassword(email: string, resetPasswordDto: ResetPasswordDto) {
+        const { newPassword, rePassword } = resetPasswordDto;
+
+        if (newPassword !== rePassword) {
+            throw new BadRequestException('Mật khẩu mới và mật khẩu xác nhận không khớp');
+        }
+
+        const user = await this.usersService.findByEmail(email);
+        if (!user) {
+            throw new NotFoundException('Không tìm thấy người dùng với email này');
         }
 
         const hashedNewPassword = await bcrypt.hash(newPassword, 10);
         await this.usersService.updatePassword(email, hashedNewPassword);
-        await this.usersService.deleteOTP(email);
-
         return { message: 'Đặt lại mật khẩu thành công' };
     }
+
+    // async resetPassword(resetPasswordDto: ResetPasswordDto) {
+    //     const { email, otp, newPassword } = resetPasswordDto;
+    //     const isValidOTP = await this.usersService.verifyOTP(email, otp);
+    //     if (!isValidOTP) {
+    //         throw new BadRequestException('Mã OTP không hợp lệ hoặc đã hết hạn');
+    //     }
+
+    //     const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+    //     await this.usersService.updatePassword(email, hashedNewPassword);
+    //     await this.usersService.deleteOTP(email);
+
+    //     return { message: 'Đặt lại mật khẩu thành công' };
+    // }
 
     private generateOTP(): string {
         return crypto.randomInt(100000, 1000000).toString();
