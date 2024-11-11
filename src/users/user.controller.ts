@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, NotFoundException, Param, ParseArrayPipe, ParseIntPipe, Post, Put, Query, Req, Search, UseGuards, UseInterceptors, UsePipes, ValidationPipe } from "@nestjs/common";
+import { Body, Controller, Delete, Get, NotFoundException, Param, ParseArrayPipe, ParseIntPipe, Patch, Post, Put, Query, Req, Search, UseGuards, UseInterceptors, UsePipes, ValidationPipe } from "@nestjs/common";
 import { UsersService } from "./users.service";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { PaginationDto } from "./dto/pagination.dto";
@@ -11,6 +11,10 @@ import { RolesGuard } from "src/auth/guard/roles.guard";
 import { InjectMapper, MapInterceptor } from "@automapper/nestjs";
 import { Mapper } from "@automapper/core";
 import { UserDto } from "./dto/user.dto";
+import { UpdateProfileDto } from "./dto/update-user.dto";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
+import { Request } from 'express';
 
 @ApiTags('users')
 @Controller('users')

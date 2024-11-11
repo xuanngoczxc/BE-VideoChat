@@ -1,10 +1,9 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, NotFoundException, Param, ParseIntPipe, Patch, Post, Put, Req, UseGuards, ValidationPipe } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, NotFoundException, Param, ParseIntPipe, Patch, Post, Put, Req, UseGuards, ValidationPipe, Request } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { AuthGuard } from './guard/auth.guard';
 import { RefreshTokenDto } from './dto/refreshToken.dto';
-import { Request } from 'express';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
@@ -45,6 +44,17 @@ export class AuthController {
     async getProfile(@Req() request: Request) {
         const user = request['user'] as { loginName: string };
         return this.authService.profile(user);
+    }
+
+    @UseGuards(AuthGuard) 
+    @ApiBearerAuth()
+    @Put('update-profile')
+    async updateProfile(
+        @Body() updateProfileDto: UpdateProfileDto, 
+        @Request() req: any
+    ) {
+        const loginName = req.user.loginName;
+        return this.authService.updateProfile(loginName, updateProfileDto);
     }
 
     @UseGuards(AuthGuard)
@@ -94,6 +104,5 @@ export class AuthController {
     async verifyOtp(@Body() verifyOtpDto: VerifyOtpDto): Promise<{ message: string }> {
         return this.authService.verifyOtp(verifyOtpDto);
     }
-
 }
 

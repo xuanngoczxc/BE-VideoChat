@@ -6,7 +6,7 @@ export class ThongTinCaNhan {
   @PrimaryColumn()
   userId: number;
 
-  @Column({nullable: true})
+  @Column({ nullable: true, type: 'timestamp' })
   NgaySinh: Date;
 
   @Column({nullable: true})
@@ -22,6 +22,6 @@ export class ThongTinCaNhan {
   AnhDaiDien: string;
 
   @OneToOne(() => User, (users) => users.thongTinCaNhan)
-    @JoinColumn({name: 'userId'})
-    users: User;
+  @JoinColumn({name: 'userId'})
+  users: User;
 }

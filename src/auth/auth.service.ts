@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { RegisterDto } from './dto/register.dto';
 import { UsersService } from 'src/users/users.service';
 import { JwtService } from '@nestjs/jwt';
@@ -31,6 +31,8 @@ export class AuthService {
         private readonly jwtService: JwtService,
         private readonly mailerService: MailerService,
         private readonly twilioService: TwilioService,
+        @InjectRepository(ThongTinCaNhan)
+        private readonly profileRepository: Repository<ThongTinCaNhan>
     ){}
 
     async register(registerDto: RegisterDto) {
@@ -81,12 +83,12 @@ export class AuthService {
         const payload = { loginName: user.loginName, id: user.id, role: user.role};
         const accessToken = await this.jwtService.signAsync(payload,{
             secret: jwtConstants.secret,
-            expiresIn: '2m'
+            expiresIn: '1d'
         });
 
         const refreshToken = await this.jwtService.signAsync(payload,{
             secret: jwtConstants.secret,
-            expiresIn: '10m'
+            expiresIn: '1d'
         });
 
         return { 
@@ -113,14 +115,57 @@ export class AuthService {
             role: foundUser.role,
             fullName: foundUser.fullName,
             loginName: foundUser.loginName,
-            ngaySinh: personalInfo?.NgaySinh,
-            gioiTinh: personalInfo?.GioiTinh,
-            diaChi: personalInfo?.DiaChi,
-            soDienThoai: personalInfo?.SoDienThoai,
-            anhDaiDien: personalInfo?.AnhDaiDien,
+            NgaySinh: personalInfo?.NgaySinh,
+            GioiTinh: personalInfo?.GioiTinh,
+            DiaChi: personalInfo?.DiaChi,
+            SoDienThoai: personalInfo?.SoDienThoai,
+            AnhDaiDien: personalInfo?.AnhDaiDien,
         };
     }
 
+    async updateProfile(loginName: string, updateProfileDto: UpdateProfileDto) {
+        let user = await this.usersService.findOneByLoginName(loginName);
+    
+        if (!user) {
+            throw new NotFoundException('Người dùng không tồn tại');
+        }
+
+        if (updateProfileDto.email && updateProfileDto.email !== user.email) {
+            const existingUserWithEmail = await this.usersService.findOneByEmail(updateProfileDto.email);
+            if (existingUserWithEmail) {
+                throw new ConflictException('Email đã tồn tại');
+            }
+        }
+
+        if (!user.thongTinCaNhan) {
+            user.thongTinCaNhan = new ThongTinCaNhan();
+            user.thongTinCaNhan.userId = user.id;
+        }
+
+        if (updateProfileDto.NgaySinh !== undefined) {
+            user.thongTinCaNhan.NgaySinh = updateProfileDto.NgaySinh ? this.parseDate(updateProfileDto.NgaySinh) : null;
+        }
+    
+        user.thongTinCaNhan.GioiTinh = updateProfileDto.GioiTinh ?? user.thongTinCaNhan.GioiTinh;
+        user.thongTinCaNhan.DiaChi = updateProfileDto.DiaChi ?? user.thongTinCaNhan.DiaChi;
+        user.thongTinCaNhan.SoDienThoai = updateProfileDto.SoDienThoai ?? user.thongTinCaNhan.SoDienThoai;
+        user.thongTinCaNhan.AnhDaiDien = updateProfileDto.AnhDaiDien ?? user.thongTinCaNhan.AnhDaiDien;
+
+        user.fullName = updateProfileDto.fullName ?? user.fullName;
+        user.email = updateProfileDto.email ?? user.email;
+    
+        console.log('Cập nhật người dùng:', user);
+
+        await this.usersService.save(user);
+        await this.profileRepository.save(user.thongTinCaNhan);
+        return this.usersService.findOneByLoginName(loginName);
+    }
+    
+    private parseDate(dateString: string): Date {
+        const [day, month, year] = dateString.split('-');
+        return new Date(`${year}-${month}-${day}`);
+    }
+    
     async changePassword(changePasswordDto: ChangePasswordDto, userId: number) {
         const { oldPassword, newPassword } = changePasswordDto;
         const user = await this.usersService.findById(userId);

@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, HttpException, HttpStatus, Injectable, InternalServerErrorException, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entity/user.entity';
 import { FindOneOptions, Repository } from 'typeorm';
@@ -12,6 +12,7 @@ import { ThongTinCaNhan } from 'src/users/entity/profile.entity';
 import { UserDto } from './dto/user.dto';
 import { profile } from 'console';
 import { Role } from 'src/auth/enums/rol.enum';
+import { UpdateProfileDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UsersService {
@@ -195,11 +196,24 @@ export class UsersService {
 
   async findByEmail(email: string): Promise<User | undefined> {
     return this.userRepository.findOne({ where: { email } });
-}
+  }
 
-// Cập nhật mật khẩu người dùng
-async updatePassword(email: string, newPassword: string): Promise<void> {
-    await this.userRepository.update({ email }, { password: newPassword });
-}
+  // Cập nhật mật khẩu người dùng
+  async updatePassword(email: string, newPassword: string): Promise<void> {
+      await this.userRepository.update({ email }, { password: newPassword });
+  }
+
+  async updateUserProfile(updatedPersonalInfo: ThongTinCaNhan): Promise<ThongTinCaNhan> {
+    return this.profileRepository.save(updatedPersonalInfo);
+  }
+
+  async updateUser(updatedUser: User): Promise<User> {
+    return this.userRepository.save(updatedUser);
+  }
+
+  async save(user: User): Promise<User> {
+    return this.userRepository.save(user);
+  }
+
 
 }
