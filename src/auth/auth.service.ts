@@ -186,19 +186,19 @@ export class AuthService {
 
     async forgotPassword(forgotPasswordDto: ForgotPasswordDto) {
         const { email } = forgotPasswordDto;
-        const user = await this.usersService.findOneByEmail(email);  // Kiểm tra người dùng có tồn tại không
+        const user = await this.usersService.findOneByEmail(email);
         if (!user) {
             throw new NotFoundException('Người dùng không tồn tại');
         }
 
-        const otp = this.generateOTP();  // Tạo OTP
-        const expiresIn = 10 * 60 * 1000;  // OTP hết hạn sau 10 phút
-        const expiresAt = new Date(Date.now() + expiresIn);  // Thời gian OTP hết hạn
+        const otp = this.generateOTP();
+        const expiresIn = 10 * 60 * 1000;
+        const expiresAt = new Date(Date.now() + expiresIn);
 
-        await this.usersService.saveOTP(email, otp, expiresAt);  // Lưu OTP vào cơ sở dữ liệu hoặc cache
-        await this.example(email, otp, user.loginName);  // Gửi email chứa OTP
+        await this.usersService.saveOTP(email, otp, expiresAt);
+        await this.example(email, otp, user.loginName);
 
-        return { message: 'Mã OTP đã được gửi đến email của bạn', otp };  // Trả về OTP cho frontend nếu cần
+        return { message: 'Mã OTP đã được gửi đến email của bạn', otp };
     }
 
     async verifyOTP(verifyOTPDto: VerifyOTPDto, email: string) {
@@ -227,19 +227,6 @@ export class AuthService {
         return { message: 'Đặt lại mật khẩu thành công' };
     }
 
-    // async resetPassword(resetPasswordDto: ResetPasswordDto) {
-    //     const { email, otp, newPassword } = resetPasswordDto;
-    //     const isValidOTP = await this.usersService.verifyOTP(email, otp);
-    //     if (!isValidOTP) {
-    //         throw new BadRequestException('Mã OTP không hợp lệ hoặc đã hết hạn');
-    //     }
-
-    //     const hashedNewPassword = await bcrypt.hash(newPassword, 10);
-    //     await this.usersService.updatePassword(email, hashedNewPassword);
-    //     await this.usersService.deleteOTP(email);
-
-    //     return { message: 'Đặt lại mật khẩu thành công' };
-    // }
 
     private generateOTP(): string {
         return crypto.randomInt(100000, 1000000).toString();
@@ -262,51 +249,42 @@ export class AuthService {
         }
     }
 
-    // async sendSMS(phoneNumber: string): Promise<void> {
+    // async sendSMS(sendOtpDto: SendOtpDto): Promise<{ message: string}> {
+    //     const { phoneNumber } = sendOtpDto;
+    //     const user = await this.usersService.findOneByPhoneNumber(phoneNumber);
+    //     if(!user) {
+    //         throw new NotFoundException ('Số điện thoại không tồn tại')
+    //     }
+
     //     const otp = this.generateOTP();
-    //     this.twilioService.client.messages.create({
-    //         body: 'SMS Body',
+    //     const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+
+    //     await this.usersService.saveOTPSMS(user.phoneNumber, otp, expiresAt)
+    //     await this.twilioService.client.messages.create({
+    //         body:`Mã xác thực của bạn là ${otp}`,
     //         from: '+1 646 846 7090',
     //         to: phoneNumber,
-    //     })
+    //     });
+    //     return { message: 'OTP đã được gửi đến số điện thoại của bạn'}
     // }
 
-    async sendSMS(sendOtpDto: SendOtpDto): Promise<{ message: string}> {
-        const { phoneNumber } = sendOtpDto;
-        const user = await this.usersService.findOneByPhoneNumber(phoneNumber);
-        if(!user) {
-            throw new NotFoundException ('Số điện thoại không tồn tại')
-        }
+    // async verifyOtp(verifyOtpDto: VerifyOtpDto): Promise<{ message: string }> {
+    //     const { phoneNumber, otp, newPassword } = verifyOtpDto;
+    //     const user = await this.usersService.findOneByPhoneNumber(phoneNumber);
+    //     if (!user) {
+    //         throw new NotFoundException('Số điện thoại không tồn tại');
+    //     }
 
-        const otp = this.generateOTP();
-        const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+    //     const isValidOTP = await this.usersService.verifyOTP(user.email, otp);
+    //     if (!isValidOTP) {
+    //         throw new NotFoundException('Mã OTP không hợp lệ hoặc đã hết hạn');
+    //     }
 
-        await this.usersService.saveOTPSMS(user.phoneNumber, otp, expiresAt)
-        await this.twilioService.client.messages.create({
-            body:`Mã xác thực của bạn là ${otp}`,
-            from: '+1 646 846 7090',
-            to: phoneNumber,
-        });
-        return { message: 'OTP đã được gửi đến số điện thoại của bạn'}
-    }
+    //     const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+    //     await this.usersService.updatePassword(user.email, hashedNewPassword);
+    //     await this.usersService.deleteOTP(user.email);
 
-    async verifyOtp(verifyOtpDto: VerifyOtpDto): Promise<{ message: string }> {
-        const { phoneNumber, otp, newPassword } = verifyOtpDto;
-        const user = await this.usersService.findOneByPhoneNumber(phoneNumber);
-        if (!user) {
-            throw new NotFoundException('Số điện thoại không tồn tại');
-        }
-
-        const isValidOTP = await this.usersService.verifyOTP(user.email, otp);
-        if (!isValidOTP) {
-            throw new NotFoundException('Mã OTP không hợp lệ hoặc đã hết hạn');
-        }
-
-        const hashedNewPassword = await bcrypt.hash(newPassword, 10);
-        await this.usersService.updatePassword(user.email, hashedNewPassword);
-        await this.usersService.deleteOTP(user.email);
-
-        return { message: 'Đặt lại mật khẩu thành công' };
-    }
+    //     return { message: 'Đặt lại mật khẩu thành công' };
+    // }
     
 }

@@ -165,17 +165,17 @@ export class UsersService {
     await this.userRepository.update({ email }, { otp: null, otpExpires: null });
   }
 
-  async findOneByPhoneNumber(phoneNumber: string): Promise<User | undefined> {
-    return this.userRepository.findOne({ where: { phoneNumber } });
-  }
+  // async findOneByPhoneNumber(phoneNumber: string): Promise<User | undefined> {
+  //   return this.userRepository.findOne({ where: { phoneNumber } });
+  // }
 
   // async updatePassword(loginName: string, newPassword: string): Promise<void> {
   //   await this.userRepository.update({ loginName }, { password: newPassword });
   // }
 
-  async saveOTPSMS(phoneNumber: string, otp: string, expiresAt: Date): Promise<void> {
-    await this.userRepository.update({ phoneNumber }, { otp, otpExpires: expiresAt });
-  }
+  // async saveOTPSMS(phoneNumber: string, otp: string, expiresAt: Date): Promise<void> {
+  //   await this.userRepository.update({ phoneNumber }, { otp, otpExpires: expiresAt });
+  // }
 
   async findOneById(id: number): Promise<User> {
       return this.userRepository.findOne({ where: { id } });

@@ -17,7 +17,7 @@ import { TwilioModule, TwilioService } from 'nestjs-twilio';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { join } from 'path';
 import { OtpService } from './otp/otp.service';
-import { WebRTCModule } from './webrtc/webrtc.module';
+import { ClassModule } from './class/class.module';
 import { LopHoc } from './users/entity/class.entity';
 import { LichSuCuocGoi } from './users/entity/history.entity';
 import { ThongTinCaNhan } from './users/entity/profile.entity';
@@ -72,7 +72,7 @@ import { DiemDanh } from './users/entity/rollcall.entity';
       },
     }),
     ScheduleModule.forRoot(),
-    WebRTCModule
+    ClassModule
   ],
   controllers: [AppController],
   providers: [AppService, OtpService],

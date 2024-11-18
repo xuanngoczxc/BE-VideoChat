@@ -8,15 +8,18 @@ export class LopHoc {
   @PrimaryGeneratedColumn()
   IDLop: number;
 
+  @Column({ length: 6, unique: true })
+  MaLop: string
+
   @Column()
   ThoiGianTao: Date;
 
   @Column()
   Quyen: string;
 
-  @ManyToOne(() => User, users => users.lopHocs)
-  @JoinColumn({ name: 'TenDangNhap' })
-  users: User;
+  @ManyToOne(() => User, user => user.lopHocs)
+  @JoinColumn({ name: 'userId' })
+  user: User;
 
   @OneToMany(() => DiemDanh, diemDanh => diemDanh.lopHoc)
   diemDanhs: DiemDanh[];

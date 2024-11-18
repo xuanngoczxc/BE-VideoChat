@@ -16,8 +16,5 @@ export class UserDto {
   email: string;
 
   @ApiProperty()
-  phoneNumber: string;
-
-  @ApiProperty()
   role: Role;
 }

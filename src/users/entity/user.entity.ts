@@ -23,8 +23,8 @@ export class User {
     @AutoMap()
     email: string;
 
-    @Column({unique: true, nullable: true})
-    phoneNumber: string;
+    // @Column({unique: true, nullable: true})
+    // phoneNumber: string;
 
     @Column({ nullable: false})
     @AutoMap()
@@ -47,7 +47,7 @@ export class User {
     @OneToOne(() => ThongTinCaNhan, thongTinCaNhan => thongTinCaNhan.users)
     thongTinCaNhan: ThongTinCaNhan;
 
-    @OneToMany(() => LopHoc, lopHoc => lopHoc.users)
+    @OneToMany(() => LopHoc, lopHoc => lopHoc.user)
     lopHocs: LopHoc[];
 
     @OneToMany(() => DiemDanh, diemDanh => diemDanh.users)
