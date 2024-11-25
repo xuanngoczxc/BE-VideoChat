@@ -93,7 +93,8 @@ export class AuthService {
 
         return { 
             access_token: accessToken,
-            refresh_token: refreshToken
+            refresh_token: refreshToken,
+            full_name: user.fullName
         };
     }
 

@@ -61,8 +61,9 @@ async function bootstrap() {
   SwaggerModule.setup('api', app, document);
   app.useGlobalPipes(new ValidationPipe({
     whitelist: true, // loại bỏ các trường không được định nghĩa
-    forbidNonWhitelisted: true, // ném lỗi nếu có trường không được định nghĩa
+    forbidNonWhitelisted: false, // ném lỗi nếu có trường không được định nghĩa
     transform: true, // tự động chuyển đổi kiểu
+    disableErrorMessages: false
   }));
 
     // Import IoAdapter if it's not already imported

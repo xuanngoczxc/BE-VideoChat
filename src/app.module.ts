@@ -30,7 +30,7 @@ import { DiemDanh } from './users/entity/rollcall.entity';
       host: 'localhost',
       port: 5432,
       username: 'postgres',
-      password: '12345',
+      password: 'Anhvu123@',
       database: 'videoChat',
       entities: [User, LopHoc, LichSuCuocGoi, ThongTinCaNhan, DiemDanh],
       synchronize: true,
@@ -77,8 +77,16 @@ import { DiemDanh } from './users/entity/rollcall.entity';
   controllers: [AppController],
   providers: [AppService, OtpService],
 })
+// export class AppModule implements NestModule {
+//   configure(consumer: MiddlewareConsumer) {
+//     consumer.apply(RequestLoggerMiddleware).forRoutes('*');
+//   }
+// }
+
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(RequestLoggerMiddleware).forRoutes('*');
+    consumer
+      .apply(RequestLoggerMiddleware)
+      .forRoutes('*'); // Áp dụng middleware cho tất cả các tuyến đường
   }
 }
