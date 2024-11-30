@@ -15,7 +15,6 @@ export class UpdateProfileDto {
   @IsOptional()
   @IsString()
   NgaySinh?: string;
-//   NgaySinh?: Date;
 
   @ApiProperty()
   @IsOptional()

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, NotFoundException, Param, ParseIntPipe, Patch, Post, Put, Req, UseGuards, ValidationPipe, Request } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, NotFoundException, Param, ParseIntPipe, Patch, Post, Put, Req, UseGuards, ValidationPipe, Request, UseInterceptors, UploadedFile, BadRequestException } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
@@ -9,10 +9,16 @@ import { ResetPasswordDto } from './dto/reset-password.dto';
 import { TwilioService } from 'nestjs-twilio';
 import { SendOtpDto } from './dto/send-sms.dto';
 import { VerifyOtpDto } from './dto/reset-password-sms.dto';
-import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { VerifyOTPDto } from './dto/VerifyOTP.dto';
 import { UpdateProfileDto } from 'src/users/dto/update-user.dto';
 import { UsersService } from 'src/users/users.service';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { FILE_UPLOADS_DIR } from './constants';
+import { fileNameEditor, imageFileFilter } from './file.utils';
+import { file } from 'googleapis/build/src/apis/file';
+import { CreateFileDto } from './dto/create-file.dto';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -50,6 +56,49 @@ export class AuthController {
     ) {
         const loginName = req.user.loginName;
         return this.authService.updateProfile(loginName, updateProfileDto);
+    }
+
+    @Post('upload-avt/:loginName')
+    @ApiConsumes('multipart/form-data')
+    @ApiBody({
+        description: 'File upload endpoint',
+        type: 'multipart/form-data',
+        schema: {
+          type: 'object',
+          properties: {
+            file: {
+              type: 'string',
+              format: 'binary'
+            },
+          },
+        },
+      })
+    @UseInterceptors(
+        FileInterceptor('file', {
+            storage: diskStorage({
+                filename: fileNameEditor,
+                destination: FILE_UPLOADS_DIR,
+            }),
+            limits: {
+                fileSize: 1000 * 1000 *1
+            },
+            fileFilter: imageFileFilter
+        })
+    )
+    async upload(
+        @Param('loginName') loginName: string,
+        @UploadedFile() file: Express.Multer.File,
+        @Body() dto: CreateFileDto,
+    ){
+        if (!file) {
+          throw new BadRequestException('No file provided');
+        }
+        
+        const updatedUser = await this.authService.updateProfile(loginName, {}, file);
+        return {
+          message: 'Avatar updated successfully',
+          data: updatedUser,
+        };
     }
 
     @UseGuards(AuthGuard)

@@ -21,7 +21,6 @@ import { User } from 'src/users/entity/user.entity';
 import { ThongTinCaNhan } from 'src/users/entity/profile.entity';
 import { UpdateProfileDto } from 'src/users/dto/update-user.dto';
 import { Role } from './enums/rol.enum';
-import * as fs from 'fs';
 
 @Injectable()
 export class AuthService {
@@ -38,7 +37,6 @@ export class AuthService {
     async register(registerDto: RegisterDto) {
         const { loginName, fullName, email, password, rePassword } = registerDto;
     
-        // Check if email already exists
         const checkEmail = await this.usersService.findOneByEmail(email);
         if (checkEmail) {
             throw new BadRequestException('Email người dùng đã tồn tại');
@@ -124,7 +122,7 @@ export class AuthService {
         };
     }
 
-    async updateProfile(loginName: string, updateProfileDto: UpdateProfileDto) {
+    async updateProfile(loginName: string, updateProfileDto: UpdateProfileDto, file?: Express.Multer.File) {
         let user = await this.usersService.findOneByLoginName(loginName);
     
         if (!user) {
@@ -150,16 +148,24 @@ export class AuthService {
         user.thongTinCaNhan.GioiTinh = updateProfileDto.GioiTinh ?? user.thongTinCaNhan.GioiTinh;
         user.thongTinCaNhan.DiaChi = updateProfileDto.DiaChi ?? user.thongTinCaNhan.DiaChi;
         user.thongTinCaNhan.SoDienThoai = updateProfileDto.SoDienThoai ?? user.thongTinCaNhan.SoDienThoai;
-        user.thongTinCaNhan.AnhDaiDien = updateProfileDto.AnhDaiDien ?? user.thongTinCaNhan.AnhDaiDien;
+        // user.thongTinCaNhan.AnhDaiDien = updateProfileDto.AnhDaiDien ?? user.thongTinCaNhan.AnhDaiDien;
+
+        if (file) {
+            const image = await this.uploadFile(file);
+            user.thongTinCaNhan.AnhDaiDien = image
+        }
 
         user.fullName = updateProfileDto.fullName ?? user.fullName;
         user.email = updateProfileDto.email ?? user.email;
-    
-        console.log('Cập nhật người dùng:', user);
 
         await this.usersService.save(user);
         await this.profileRepository.save(user.thongTinCaNhan);
         return this.usersService.findOneByLoginName(loginName);
+    }
+
+    private async uploadFile(file: Express.Multer.File): Promise<string> {
+        const filePath = `/uploads/${file.filename}`;
+        return filePath;
     }
     
     private parseDate(dateString: string): Date {
