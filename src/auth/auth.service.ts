@@ -205,7 +205,7 @@ export class AuthService {
         await this.usersService.saveOTP(email, otp, expiresAt);
         await this.example(email, otp, user.loginName);
 
-        return { message: 'Mã OTP đã được gửi đến email của bạn', otp };
+        return { message: 'Mã OTP đã được gửi đến email của bạn', otp }
     }
 
     async verifyOTP(verifyOTPDto: VerifyOTPDto, email: string) {

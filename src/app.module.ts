@@ -49,7 +49,6 @@ import { DiemDanh } from './users/entity/rollcall.entity';
       transport: {
         host: 'smtp.gmail.com',
         port: 587,
-        // ignoreTLS: true,
         secure: false,
         auth: {
           user: "xuanngoczxc@gmail.com",
@@ -77,16 +76,11 @@ import { DiemDanh } from './users/entity/rollcall.entity';
   controllers: [AppController],
   providers: [AppService, OtpService],
 })
-// export class AppModule implements NestModule {
-//   configure(consumer: MiddlewareConsumer) {
-//     consumer.apply(RequestLoggerMiddleware).forRoutes('*');
-//   }
-// }
 
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(RequestLoggerMiddleware)
-      .forRoutes('*'); // Áp dụng middleware cho tất cả các tuyến đường
+      .forRoutes('*');
   }
 }
