@@ -22,6 +22,7 @@ import { LopHoc } from './users/entity/class.entity';
 import { LichSuCuocGoi } from './users/entity/history.entity';
 import { ThongTinCaNhan } from './users/entity/profile.entity';
 import { DiemDanh } from './users/entity/rollcall.entity';
+import { SupabaseModule } from './supabase/supabase.module';
 
 @Module({
   imports: [
@@ -71,7 +72,7 @@ import { DiemDanh } from './users/entity/rollcall.entity';
       },
     }),
     ScheduleModule.forRoot(),
-    ClassModule
+    ClassModule, SupabaseModule
   ],
   controllers: [AppController],
   providers: [AppService, OtpService],
