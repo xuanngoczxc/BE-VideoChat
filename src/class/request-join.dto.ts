@@ -1,15 +1,11 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsString, IsInt, IsNotEmpty, IsNumber } from 'class-validator';
-import { Transform, Type } from 'class-transformer';
-import { number } from "joi";
+import { IsString, IsNotEmpty } from 'class-validator';
 
 export class RequestJoinDto {
   @ApiProperty()
-  @IsInt()
+  @IsString()
   @IsNotEmpty()
-  // @Type(() => number)
-  @Transform(({ value }) => parseInt(value, 10), { toClassOnly: true }) // Chuyển đổi chuỗi số thành số
-  userId: number;
+  userName: string;
 
   @ApiProperty()
   @IsString()

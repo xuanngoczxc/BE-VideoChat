@@ -94,6 +94,7 @@ export class AuthService {
         return { 
             access_token: accessToken,
             refresh_token: refreshToken,
+            user_name: user.loginName,
             full_name: user.fullName
         };
     }

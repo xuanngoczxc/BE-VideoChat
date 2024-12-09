@@ -39,8 +39,13 @@ export class RequestLoggerMiddleware implements NestMiddleware {
       );
 
       // Log chi tiết body và query params
-      this.logger.debug(`Request Body: ${JSON.stringify(body)}`);
-      this.logger.debug(`Query Params: ${JSON.stringify(query)}`);
+      // this.logger.log(`Request Body: ${JSON.stringify(body)}`);
+      
+      // Log cảnh báo nếu có lỗi
+      if (statusCode >= 400) {
+        const errorDetails = res.locals.errorDetails || {}; // Lấy lỗi từ res.locals
+        this.logger.error(`Error Response: ${JSON.stringify(errorDetails)}`);
+      }
 
       // Log cảnh báo nếu mã trạng thái không mong muốn
       if (statusCode === 401 || statusCode === 404 || statusCode === 405) {
@@ -51,3 +56,4 @@ export class RequestLoggerMiddleware implements NestMiddleware {
     next();
   }
 }
+ 

@@ -12,6 +12,11 @@ import { UsePipes, ValidationPipe, ParseIntPipe } from '@nestjs/common';
 export class WebRTCController {
   constructor(private readonly classService: ClassService) {}
 
+  @Post('request-join')
+  requestJoin(@Body() body: RequestJoinDto) {
+    return this.classService.handleJoinRequest(body);
+  }
+
   @Post(':userId')
   async createLopHoc(
     @Param('userId', ParseIntPipe) userId: number,
@@ -28,20 +33,5 @@ export class WebRTCController {
     } else {
       return { exists: false, message: 'Lớp học không tồn tại' };
     }
-  }
-
-  @Post('request-join')
-  // @UsePipes(new ValidationPipe())
-  requestJoin(@Body() body: RequestJoinDto) {
-    console.log('Request body:', body);
-    console.log('userId type:', typeof body.userId); // Log kiểu dữ liệu
-
-    return this.classService.handleJoinRequest(body);
-  }
-  
-  
-  @Post('approve-join')
-  async approveJoin(@Body() body: { userId: number; classCode: string }) {
-      return this.classService.approveJoinRequest(body.userId, body.classCode);
   }
 }
