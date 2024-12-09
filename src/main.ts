@@ -1,3 +1,5 @@
+// process.env.DEBUG = 'socket.io:*'; // Hiển thị mọi log liên quan đến socket.io
+
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
@@ -8,6 +10,8 @@ import { format, transports } from 'winston';
 import * as dotenv from 'dotenv';
 import { IoAdapter } from '@nestjs/platform-socket.io';
 import { AuthGuard } from './auth/guard/auth.guard';
+import { BadRequestException } from '@nestjs/common';
+import { HttpErrorFilter } from './utils/http-error.filter'
 
 async function bootstrap() {
   dotenv.config();
@@ -61,10 +65,16 @@ async function bootstrap() {
   SwaggerModule.setup('api', app, document);
   app.useGlobalPipes(new ValidationPipe({
     whitelist: true, // loại bỏ các trường không được định nghĩa
-    forbidNonWhitelisted: false, // ném lỗi nếu có trường không được định nghĩa
+    forbidNonWhitelisted: true, // ném lỗi nếu có trường không được định nghĩa
     transform: true, // tự động chuyển đổi kiểu
-    disableErrorMessages: false
+    disableErrorMessages: false,
+    exceptionFactory: (errors) => {
+      console.error('Validation Errors:', errors);
+      return new BadRequestException(errors);
+    },
   }));
+
+  app.useGlobalFilters(new HttpErrorFilter())
 
     // Import IoAdapter if it's not already imported
     app.useWebSocketAdapter(new IoAdapter(app));
