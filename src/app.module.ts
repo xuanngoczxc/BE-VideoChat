@@ -61,7 +61,7 @@ import { DiemDanh } from './users/entity/rollcall.entity';
       defaults: {
         from: `"NestJS" <xuanngoczxc@gmail.com>`
       },
-      preview: true,
+      preview: false,
       template: {
         dir: join(__dirname, '/templates') ,
         adapter: new HandlebarsAdapter(),

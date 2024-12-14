@@ -204,7 +204,7 @@ export class AuthService {
         const expiresAt = new Date(Date.now() + expiresIn);
 
         await this.usersService.saveOTP(email, otp, expiresAt);
-        await this.example(email, otp, user.loginName);
+        await this.example(email, otp, user.fullName);
 
         return { message: 'Mã OTP đã được gửi đến email của bạn', otp }
     }
@@ -235,20 +235,20 @@ export class AuthService {
         return { message: 'Đặt lại mật khẩu thành công' };
     }
 
-
     private generateOTP(): string {
         return crypto.randomInt(100000, 1000000).toString();
     }
 
-    private async example(email: string, otp: string, name: string): Promise<void> {
+    private async example(email: string, otp: string, fullName: string): Promise<void> {
+        console.log(fullName)
         try {
           await this.mailerService.sendMail({
             to: email,
             from: `"NestJS" <xuanngoczxc@gmail.com>`,
-            subject: 'Your OTP Code',
+            subject: 'Mã OTP xác thực đổi mật khẩu',
             template: './send',
             context: {
-                name, otp
+                fullName, otp
             }
           });
           console.log('OTP email sent successfully');

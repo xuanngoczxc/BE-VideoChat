@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException, InternalServerErrorException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, InternalServerErrorException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LopHoc } from 'src/users/entity/class.entity';
 import { User } from 'src/users/entity/user.entity';
@@ -31,12 +31,27 @@ export class ClassService {
 
     const lopHoc = this.classRepository.create({
       ThoiGianTao: new Date(),
-      Quyen: 'Admin',  // Mặc định là Admin
-      user: user,      // Đảm bảo trường 'user' khớp với entity
+      Quyen: 'Admin',
+      user: user,
       MaLop: this.generateRandomClassCode(),
     });
 
     return this.classRepository.save(lopHoc);
+  }
+
+  async outClass( MaLop: string): Promise<string> {
+
+    const lopHoc = await this.classRepository.findOne({
+      where: { MaLop: MaLop},
+      relations: ['user'],
+    });
+  
+    if (!lopHoc) {
+      throw new NotFoundException('Lớp học không tồn tại');
+    }
+
+    await this.classRepository.remove(lopHoc);
+    return `Mã lớp đã được xóa`;
   }
 
   private generateRandomClassCode(): string {
@@ -119,6 +134,4 @@ export class ClassService {
       throw new InternalServerErrorException('Có lỗi xảy ra khi xử lý yêu cầu');
     }
   }
-  
-
 }
