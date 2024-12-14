@@ -62,9 +62,18 @@ export class NotificationGateway implements OnGatewayConnection, OnGatewayDiscon
     if (!this.userSockets.has(userIdNumber)) {
         this.userSockets.set(userIdNumber, new Set());
     }
-    this.userSockets.get(userIdNumber).add(client.id);
+
+    const sockets = this.userSockets.get(userIdNumber);
+    if (!sockets) {
+        this.logger.error(`Không thể khởi tạo Set cho userId ${userIdNumber}`);
+        return;
+    }
+
+    sockets.add(client.id);
 
     this.logger.log(`Client với userId ${userIdNumber} đã kết nối (socketId: ${client.id})`);
+    this.logger.log(`userSockets sau khi khởi tạo: ${JSON.stringify([...this.userSockets.entries()].map(([k, v]) => [k, [...v]]))}`);
+
     this.logState();
   }
 
@@ -123,24 +132,29 @@ export class NotificationGateway implements OnGatewayConnection, OnGatewayDiscon
 
     const userIdNumber = parseInt(userId as string, 10);
 
-    // Xóa socketId khỏi Set của userId
-    if (this.userSockets.has(userIdNumber)) {
-        const sockets = this.userSockets.get(userIdNumber);
-        sockets.delete(client.id);
+    // Log trạng thái trước
+    // this.logger.log(`Trước khi xử lý: userSockets=${JSON.stringify([...this.userSockets.entries()])}, rooms=${JSON.stringify([...this.rooms])}`);
 
+
+    // Xóa socketId khỏi Set của userId
+    const sockets = this.userSockets.get(userIdNumber);
+    if (sockets && sockets.has(client.id)) {
+        sockets.delete(client.id);
         if (sockets.size === 0) {
             this.userSockets.delete(userIdNumber);
         }
-
         this.logger.log(`Xóa socketId: ${client.id} khỏi userSockets cho userId ${userIdNumber}`);
-      } else {
-        this.logger.warn(`SocketId: ${client.id} không được tìm thấy trong userSockets.`);
+    } else {
+        this.logger.warn(`Không tìm thấy socketId ${client.id} trong userSockets của userId ${userIdNumber}`);
     }
 
     // Xóa người dùng khỏi phòng
     if (this.rooms.has(classCode as string)) {
       const roomUsers = this.rooms.get(classCode as string);
-      const updatedUsers = roomUsers.filter((user) => user.userId !== userId);
+      // const updatedUsers = roomUsers.filter((user) => user.userId !== userId);
+      const updatedUsers = roomUsers.filter(
+        (user) => String(user.userId) !== String(userId)
+      );
       this.rooms.set(classCode as string, updatedUsers);
 
       // Nếu phòng rỗng, xóa phòng
@@ -157,6 +171,8 @@ export class NotificationGateway implements OnGatewayConnection, OnGatewayDiscon
     }
 
     this.logState();
+    // this.logger.log(`Sau khi xử lý: userSockets=${JSON.stringify([...this.userSockets.entries()])}, rooms=${JSON.stringify([...this.rooms])}`);
+
   }
 
   private logState() {
@@ -178,8 +194,10 @@ export class NotificationGateway implements OnGatewayConnection, OnGatewayDiscon
    * Xử lý sự kiện WebRTC offer
    */
     @SubscribeMessage('offer')
-    async handleOffer(client: Socket, payload: { offer: RTCSessionDescriptionInit, targetUserId: number, senderUserId: string }) {
+    async handleOffer(client: Socket, payload: { offer: RTCSessionDescriptionInit, targetUserId: number, senderUserId: number }) {
       const targetSocketIds = this.userSockets.get(payload.targetUserId);
+      // console.log(payload.targetUserId, typeof(payload.targetUserId), targetSocketIds); // Debug
+
 
       if (targetSocketIds && targetSocketIds.size > 0) {
           this.logger.log(`Nhận 'offer' từ client ${client.id}, phát đến userId ${payload.targetUserId}`);
@@ -227,9 +245,15 @@ export class NotificationGateway implements OnGatewayConnection, OnGatewayDiscon
     // }
 
     @SubscribeMessage('answer')
-    async handleAnswer(client: Socket, payload: { answer: RTCSessionDescriptionInit, targetUserId: number }) {
-        const targetSocketIds = this.userSockets.get(payload.targetUserId);
-        this.logState();
+    async handleAnswer(client: Socket, payload: { answer: RTCSessionDescriptionInit, targetUserId: number|string }) {
+        const targetUserId = typeof payload.targetUserId === 'string' 
+          ? parseInt(payload.targetUserId, 10) 
+          : payload.targetUserId; // Ép kiểu nếu cần
+
+        const targetSocketIds = this.userSockets.get(targetUserId);
+        // this.logState();
+        // console.log(payload.targetUserId, typeof payload.targetUserId); // Debug kiểu gốc
+        // console.log(targetUserId, typeof targetUserId, targetSocketIds); // Debug sau ép kiểu 
     
         if (targetSocketIds && targetSocketIds.size > 0) {
             const validSocketIds = Array.from(targetSocketIds).filter(
@@ -251,6 +275,8 @@ export class NotificationGateway implements OnGatewayConnection, OnGatewayDiscon
         } else {
             this.logger.warn(`Không tìm thấy socket cho userId ${payload.targetUserId}`);
         }
+        // const allSockets = Array.from(this.server.sockets.sockets.keys());
+        // this.logger.log(`Tất cả socketId hiện tại trên server: ${JSON.stringify(allSockets)}`);
     }
     
   
@@ -258,8 +284,12 @@ export class NotificationGateway implements OnGatewayConnection, OnGatewayDiscon
      * Xử lý sự kiện WebRTC ICE Candidate
      */
     @SubscribeMessage('ice-candidate')
-    async handleIceCandidate(client: Socket, payload: { candidate: RTCIceCandidate, targetUserId: number, senderUserId: string }) {
-      const targetSocketIds = this.userSockets.get(payload.targetUserId);
+    async handleIceCandidate(client: Socket, payload: { candidate: RTCIceCandidate, targetUserId: number|string, senderUserId: string|number }) {
+      const targetUserId = typeof payload.targetUserId === 'string'
+      ? parseInt(payload.targetUserId, 10)
+      : payload.targetUserId;
+
+      const targetSocketIds = this.userSockets.get(targetUserId);
 
       if (targetSocketIds && targetSocketIds.size > 0) {
           this.logger.log(`Nhận 'ice-candidate' từ client ${client.id}, phát đến userId ${payload.targetUserId}`);
@@ -424,6 +454,23 @@ export class NotificationGateway implements OnGatewayConnection, OnGatewayDiscon
     this.logger.log(`Nhận file từ userId ${message.userId}: "${message.text}"`);
     // Phát file cho cả phòng
     this.server.to(classCode).emit('receive-message', message);
+  }
+
+  @SubscribeMessage('raise_hand')
+  handleRaiseHand(client: Socket, payload: { 
+    userId: number, 
+    classCode: string, 
+    fullName: string, 
+    userName: string 
+  }) {
+    // Broadcast sự kiện giơ tay đến tất cả các client trong cùng lớp học
+    this.server.to(payload.classCode).emit('hand_raised', {
+      userId: payload.userId,
+      fullName: payload.fullName,
+      userName: payload.userName
+    });
+
+    this.logger.log(`${payload.fullName} đang giơ tay trong lớp ${payload.classCode}`);
   }
 
   // Server
