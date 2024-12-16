@@ -30,7 +30,7 @@ import { DiemDanh } from './users/entity/rollcall.entity';
       host: 'localhost',
       port: 5432,
       username: 'postgres',
-      password: 'Anhvu123@',
+      password: '12345',
       database: 'videoChat',
       entities: [User, LopHoc, LichSuCuocGoi, ThongTinCaNhan, DiemDanh],
       synchronize: true,
@@ -49,7 +49,6 @@ import { DiemDanh } from './users/entity/rollcall.entity';
       transport: {
         host: 'smtp.gmail.com',
         port: 587,
-        // ignoreTLS: true,
         secure: false,
         auth: {
           user: "xuanngoczxc@gmail.com",
@@ -62,7 +61,7 @@ import { DiemDanh } from './users/entity/rollcall.entity';
       defaults: {
         from: `"NestJS" <xuanngoczxc@gmail.com>`
       },
-      preview: true,
+      preview: false,
       template: {
         dir: join(__dirname, '/templates') ,
         adapter: new HandlebarsAdapter(),
@@ -77,16 +76,11 @@ import { DiemDanh } from './users/entity/rollcall.entity';
   controllers: [AppController],
   providers: [AppService, OtpService],
 })
-// export class AppModule implements NestModule {
-//   configure(consumer: MiddlewareConsumer) {
-//     consumer.apply(RequestLoggerMiddleware).forRoutes('*');
-//   }
-// }
 
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(RequestLoggerMiddleware)
-      .forRoutes('*'); // Áp dụng middleware cho tất cả các tuyến đường
+      .forRoutes('*');
   }
 }

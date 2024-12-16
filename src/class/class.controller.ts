@@ -1,11 +1,12 @@
 import { RequestJoinDto } from './request-join.dto';
 import { Controller, Get, Post, Body, Param } from '@nestjs/common';
 import { ClassService } from './class.service';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiTags } from '@nestjs/swagger';
 import { LopHoc } from 'src/users/entity/class.entity';
 import { BadRequestException } from '@nestjs/common';
 import { UsePipes, ValidationPipe, ParseIntPipe } from '@nestjs/common';
 import { AttendanceDto } from './attendance.dto';
+import { OutClassDto } from './out-class.dto';
 
 
 @ApiTags('Room-Class')
@@ -41,9 +42,14 @@ export class WebRTCController {
   @Post(':userId')
   async createLopHoc(
     @Param('userId', ParseIntPipe) userId: number,
-    @Body() body: any // Không cần DTO, nhận trực tiếp body
+    @Body() body: any
   ): Promise<LopHoc> {
     return this.classService.createLopHoc(userId, body);
+  }
+
+  @Post('out-class/:MaLop')
+  async outLopHoc(@Param('MaLop') MaLop: string): Promise<string> {
+    return this.classService.outClass(MaLop);
   }
 
   @Get('check-class/:MaLop')

@@ -5,11 +5,11 @@ import { UsersModule } from 'src/users/users.module';
 import { JwtModule, JwtService } from '@nestjs/jwt';
 import { jwtConstants } from './constants/jwt.constant';
 import { TwilioModule } from 'nestjs-twilio';
-import { AuthGuard } from './guard/auth.guard';
-import { UsersService } from 'src/users/users.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from 'src/users/entity/user.entity';
 import { ThongTinCaNhan } from 'src/users/entity/profile.entity';
+import { MulterModule } from '@nestjs/platform-express';
+import { FILE_UPLOADS_DIR } from './constants';
 
 @Module({
   providers: [AuthService],
@@ -21,6 +21,12 @@ import { ThongTinCaNhan } from 'src/users/entity/profile.entity';
       global: true,
       secret: jwtConstants.secret,
       signOptions: { expiresIn: '30m'},
+    }),
+    MulterModule.register({
+      dest: FILE_UPLOADS_DIR,
+      limits: {
+        fieldSize: 100 * 1000 *10
+      }
     }),
     TwilioModule.forRoot({
       accountSid: 'ACeb74069b93f7e5bc46db6a3c77188e20',

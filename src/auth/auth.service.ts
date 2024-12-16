@@ -21,7 +21,6 @@ import { User } from 'src/users/entity/user.entity';
 import { ThongTinCaNhan } from 'src/users/entity/profile.entity';
 import { UpdateProfileDto } from 'src/users/dto/update-user.dto';
 import { Role } from './enums/rol.enum';
-import * as fs from 'fs';
 
 @Injectable()
 export class AuthService {
@@ -38,7 +37,6 @@ export class AuthService {
     async register(registerDto: RegisterDto) {
         const { loginName, fullName, email, password, rePassword } = registerDto;
     
-        // Check if email already exists
         const checkEmail = await this.usersService.findOneByEmail(email);
         if (checkEmail) {
             throw new BadRequestException('Email người dùng đã tồn tại');
@@ -125,7 +123,7 @@ export class AuthService {
         };
     }
 
-    async updateProfile(loginName: string, updateProfileDto: UpdateProfileDto) {
+    async updateProfile(loginName: string, updateProfileDto: UpdateProfileDto, file?: Express.Multer.File) {
         let user = await this.usersService.findOneByLoginName(loginName);
     
         if (!user) {
@@ -151,16 +149,24 @@ export class AuthService {
         user.thongTinCaNhan.GioiTinh = updateProfileDto.GioiTinh ?? user.thongTinCaNhan.GioiTinh;
         user.thongTinCaNhan.DiaChi = updateProfileDto.DiaChi ?? user.thongTinCaNhan.DiaChi;
         user.thongTinCaNhan.SoDienThoai = updateProfileDto.SoDienThoai ?? user.thongTinCaNhan.SoDienThoai;
-        user.thongTinCaNhan.AnhDaiDien = updateProfileDto.AnhDaiDien ?? user.thongTinCaNhan.AnhDaiDien;
+        // user.thongTinCaNhan.AnhDaiDien = updateProfileDto.AnhDaiDien ?? user.thongTinCaNhan.AnhDaiDien;
+
+        if (file) {
+            const image = await this.uploadFile(file);
+            user.thongTinCaNhan.AnhDaiDien = image
+        }
 
         user.fullName = updateProfileDto.fullName ?? user.fullName;
         user.email = updateProfileDto.email ?? user.email;
-    
-        console.log('Cập nhật người dùng:', user);
 
         await this.usersService.save(user);
         await this.profileRepository.save(user.thongTinCaNhan);
         return this.usersService.findOneByLoginName(loginName);
+    }
+
+    private async uploadFile(file: Express.Multer.File): Promise<string> {
+        const filePath = `/uploads/${file.filename}`;
+        return filePath;
     }
     
     private parseDate(dateString: string): Date {
@@ -198,9 +204,9 @@ export class AuthService {
         const expiresAt = new Date(Date.now() + expiresIn);
 
         await this.usersService.saveOTP(email, otp, expiresAt);
-        await this.example(email, otp, user.loginName);
+        await this.example(email, otp, user.fullName);
 
-        return { message: 'Mã OTP đã được gửi đến email của bạn', otp };
+        return { message: 'Mã OTP đã được gửi đến email của bạn', otp }
     }
 
     async verifyOTP(verifyOTPDto: VerifyOTPDto, email: string) {
@@ -229,20 +235,20 @@ export class AuthService {
         return { message: 'Đặt lại mật khẩu thành công' };
     }
 
-
     private generateOTP(): string {
         return crypto.randomInt(100000, 1000000).toString();
     }
 
-    private async example(email: string, otp: string, name: string): Promise<void> {
+    private async example(email: string, otp: string, fullName: string): Promise<void> {
+        console.log(fullName)
         try {
           await this.mailerService.sendMail({
             to: email,
             from: `"NestJS" <xuanngoczxc@gmail.com>`,
-            subject: 'Your OTP Code',
+            subject: 'Mã OTP xác thực đổi mật khẩu',
             template: './send',
             context: {
-                name, otp
+                fullName, otp
             }
           });
           console.log('OTP email sent successfully');
