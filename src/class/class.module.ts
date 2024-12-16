@@ -4,10 +4,11 @@ import { ClassService } from './class.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { LopHoc } from 'src/users/entity/class.entity';
 import { User } from 'src/users/entity/user.entity';
+import { DiemDanh } from 'src/users/entity/rollcall.entity';
 import { NotificationGateway } from './notification.gateway';
 
 @Module({
-  imports:[TypeOrmModule.forFeature([LopHoc, User])],
+  imports:[TypeOrmModule.forFeature([LopHoc, User, DiemDanh])],
   controllers: [WebRTCController],
   providers: [ClassService, NotificationGateway],
 })

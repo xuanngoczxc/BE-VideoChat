@@ -8,16 +8,22 @@ export class DiemDanh {
   IDDiemDanh: number;
 
   @Column()
-  ThoiGianVao: Date;
+  HoTen: string;
 
   @Column()
-  ThoiGianRa: Date;
+  TenDangNhap: string;
 
   @Column()
-  DiHoc: boolean;
+  Ngay: Date;
+
+  @Column()
+  DiHoc: string;
+
+  @Column()
+  MaLop: string;
 
   @ManyToOne(() => LopHoc, lopHoc => lopHoc.diemDanhs)
-  @JoinColumn({ name: 'IDLop' })
+  @JoinColumn({ name: 'MaLop' })
   lopHoc: LopHoc;
 
   @ManyToOne(() => User, users => users.diemDanhs)
