@@ -150,8 +150,8 @@ async function bootstrap() {
 
   // Swagger setup
   const config = new DocumentBuilder()
-    .setTitle('Video chat example')
-    .setDescription('API of online learning application')
+    .setTitle('API Video chat')
+    // .setDescription('API of online learning application')
     .setVersion('2.0')
     .addBearerAuth()
     .build();
