@@ -10,23 +10,23 @@ export class DiemDanh {
   @Column()
   HoTen: string;
 
-  @Column()
+  @Column({ nullable: true })
   TenDangNhap: string;
 
-  @Column()
+  @ManyToOne(() => User, users => users.diemDanhs)
+  @JoinColumn({ name: 'TenDangNhap', referencedColumnName: 'loginName' })
+  users: User;
+
+  @Column({ nullable: true })
   Ngay: Date;
 
-  @Column()
+  @Column({ nullable: true })
   DiHoc: string;
 
-  @Column()
+  @Column({ nullable: true })
   MaLop: string;
 
   @ManyToOne(() => LopHoc, lopHoc => lopHoc.diemDanhs)
-  @JoinColumn({ name: 'MaLop' })
+  @JoinColumn({ name: 'MaLop', referencedColumnName: 'MaLop' })
   lopHoc: LopHoc;
-
-  @ManyToOne(() => User, users => users.diemDanhs)
-  @JoinColumn({ name: 'TenDangNhap' })
-  users: User;
 }

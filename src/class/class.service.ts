@@ -3,10 +3,12 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { LopHoc } from 'src/users/entity/class.entity';
 import { User } from 'src/users/entity/user.entity';
 import { DiemDanh } from 'src/users/entity/rollcall.entity';
+import { LichSuCuocGoi } from 'src/users/entity/history.entity';
 import { Repository } from 'typeorm';
 import { CreateClassDto } from './create-class.dto';
 import { RequestJoinDto } from './request-join.dto';
 import { AttendanceDto } from './attendance.dto';
+import { HistoryCallDto } from './history-call.dto';
 import { NotificationGateway } from './notification.gateway';
 
 @Injectable()
@@ -20,6 +22,9 @@ export class ClassService {
 
     @InjectRepository(DiemDanh)
     private readonly rollCallRepository: Repository<DiemDanh>,
+
+    @InjectRepository(LichSuCuocGoi)
+    private readonly historyCallRepository: Repository<LichSuCuocGoi>,
 
     private readonly notificationGateway: NotificationGateway, // Inject Gateway
   ) {}
@@ -112,25 +117,85 @@ export class ClassService {
     try {
       // Lọc dữ liệu hợp lệ
       const validData = attendanceData.filter(
-        (data) => data.HoTen && data.TenDangNhap && data.Ngay && data.DiHoc && data.MaLop
-      ).map((data) => ({
-        HoTen: data.HoTen,
-        TenDangNhap: data.TenDangNhap,
-        Ngay: new Date(data.Ngay),
-        DiHoc: data.DiHoc,
-        MaLop: data.MaLop,
-      }));
+        (data) =>
+          data.HoTen &&
+          data.TenDangNhap &&
+          data.Ngay &&
+          data.DiHoc &&
+          data.MaLop
+      );
   
       if (validData.length === 0) {
         throw new Error('Không có dữ liệu hợp lệ để lưu.');
       }
   
+      // Chuẩn bị dữ liệu với quan hệ đồng bộ
+      const processedData = await Promise.all(
+        validData.map(async (data) => {
+          // Tìm User theo TenDangNhap
+          const user = await this.userRepository.findOne({
+            where: { loginName: data.TenDangNhap },
+          });
+  
+          if (!user) {
+            throw new Error(`Người dùng với TenDangNhap "${data.TenDangNhap}" không tồn tại.`);
+          }
+  
+          // Tìm LopHoc theo MaLop
+          const lopHoc = await this.classRepository.findOne({
+            where: { MaLop: data.MaLop },
+          });
+  
+          if (!lopHoc) {
+            throw new Error(`Lớp học với MaLop "${data.MaLop}" không tồn tại.`);
+          }
+  
+          // Trả về dữ liệu đã đồng bộ
+          return {
+            HoTen: data.HoTen,
+            TenDangNhap: user.loginName,
+            Ngay: new Date(data.Ngay),
+            DiHoc: data.DiHoc,
+            MaLop: lopHoc.MaLop,
+            users: user, // Liên kết với entity User
+            lopHoc: lopHoc, // Liên kết với entity LopHoc
+          };
+        })
+      );
+  
       // Lưu toàn bộ dữ liệu cùng lúc
-      await this.rollCallRepository.save(validData);
+      await this.rollCallRepository.save(processedData);
   
       console.log('Tất cả dữ liệu hợp lệ đã được lưu.');
     } catch (error) {
       throw new Error(`Không thể lưu dữ liệu điểm danh: ${error.message}`);
     }
+  }
+  
+
+  async saveHistoryCall(data: HistoryCallDto): Promise<void> {
+    const { classCode, startTime, endTime } = data;
+  
+    if (!classCode || !startTime || !endTime) {
+      throw new Error('Thiếu dữ liệu cần thiết.');
+    }
+
+    // Tìm lớp học dựa trên MaLop
+    const lopHoc = await this.classRepository.findOne({ where: { MaLop: classCode } });
+
+    if (!lopHoc) {
+      throw new Error('Lớp học không tồn tại.');
+    }
+  
+    const historyData = {
+      MaLop: lopHoc.MaLop,
+      lopHoc: lopHoc,             // Liên kết với entity LopHoc
+      TGBatDau: new Date(startTime),
+      TGKetThuc: new Date(endTime),
+    };
+  
+    await this.historyCallRepository.save(historyData);
+  
+    console.log('Lịch sử cuộc gọi đã được lưu:', historyData);
   }
 }

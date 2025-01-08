@@ -114,8 +114,6 @@ export class NotificationGateway implements OnGatewayConnection, OnGatewayDiscon
     this.logger.log(`Phát sự kiện room-users tới phòng ${classCode} với dữ liệu: ${JSON.stringify(roomUsers)}`);
   }
 
-  
-
   /**
    * Xử lý khi có một client ngắt kết nối
    * @param client Socket
@@ -194,116 +192,104 @@ export class NotificationGateway implements OnGatewayConnection, OnGatewayDiscon
    * Xử lý sự kiện WebRTC offer
    */
     @SubscribeMessage('offer')
-    async handleOffer(client: Socket, payload: { offer: RTCSessionDescriptionInit, targetUserId: number, senderUserId: number }) {
-      const targetSocketIds = this.userSockets.get(payload.targetUserId);
-      // console.log(payload.targetUserId, typeof(payload.targetUserId), targetSocketIds); // Debug
+    // async handleOffer(client: Socket, payload: { offer: RTCSessionDescriptionInit, targetUserId: number, senderUserId: number }) {
+    //   const targetSocketIds = this.userSockets.get(payload.targetUserId);
+    //   // console.log(payload.targetUserId, typeof(payload.targetUserId), targetSocketIds); // Debug
 
 
-      if (targetSocketIds && targetSocketIds.size > 0) {
-          this.logger.log(`Nhận 'offer' từ client ${client.id}, phát đến userId ${payload.targetUserId}`);
+    //   if (targetSocketIds && targetSocketIds.size > 0) {
+    //       this.logger.log(`Nhận 'offer' từ client ${client.id}, phát đến userId ${payload.targetUserId}`);
           
-          targetSocketIds.forEach(targetSocketId => {
-              this.server.to(targetSocketId).emit('offer', {
-                  offer: payload.offer,
-                  senderUserId: payload.senderUserId,
-              });
-          });
-      } else {
-          this.logger.warn(`Không tìm thấy socket cho userId ${payload.targetUserId}`);
-      }
-    }    
+    //       targetSocketIds.forEach(targetSocketId => {
+    //           this.server.to(targetSocketId).emit('offer', {
+    //               offer: payload.offer,
+    //               senderUserId: payload.senderUserId,
+    //           });
+    //       });
+    //   } else {
+    //       this.logger.warn(`Không tìm thấy socket cho userId ${payload.targetUserId}`);
+    //   }
+    // }    
   
+    handleOffer(client: Socket, payload: { offer: RTCSessionDescriptionInit; room: string; senderId: string }) {
+      const { room, senderId } = payload;
+      this.logger.log(`Nhận 'offer' từ client ${client.id} và phát trong room: ${room}`);
+      this.server.to(room).emit('offer', { offer: payload.offer });
+    }
+
     /**
      * Xử lý sự kiện WebRTC answer
      */
-    // @SubscribeMessage('answer')
-    // async handleAnswer(client: Socket, payload: { answer: RTCSessionDescriptionInit, targetUserId: number }) {
-    //     const socketIds = Array.from(this.userSockets.get(payload.targetUserId) || []);
-    //     this.logger.log(`Danh sách socketId cho userId ${payload.targetUserId}: ${JSON.stringify(socketIds)}`);
-        
-    //     const validSocketIds = socketIds.filter(id => this.server.sockets.sockets.has(id));
-    //     this.logger.log(`SocketId hợp lệ cho userId ${payload.targetUserId}: ${JSON.stringify(validSocketIds)}`);
-    
-    //     if (validSocketIds.length > 0) {
-    //         validSocketIds.forEach(socketId => {
-    //             this.server.to(socketId).emit('answer', payload);
-    //             this.logger.log(`Gửi 'answer' tới socketId: ${socketId}`);
-    //         });
-    //     } else {
-    //         this.logger.warn(`Không tìm thấy socket hợp lệ cho userId ${payload.targetUserId}`);
-    //     }
-    
-    //     // Log toàn bộ trạng thái userSockets để debug
-    //     const userSocketsArray = Array.from(this.userSockets.entries()).map(
-    //         ([key, value]) => [key, Array.from(value)]
-    //     );
-    //     this.logger.log(`Danh sách userSockets hiện tại: ${JSON.stringify(userSocketsArray)}`);
-    
-    //     // Log toàn bộ socketId hiện có trên server
-    //     const allSockets = Array.from(this.server.sockets.sockets.keys());
-    //     this.logger.log(`Tất cả socketId hiện tại trên server: ${JSON.stringify(allSockets)}`);
-    // }
-
     @SubscribeMessage('answer')
-    async handleAnswer(client: Socket, payload: { answer: RTCSessionDescriptionInit, targetUserId: number|string }) {
-        const targetUserId = typeof payload.targetUserId === 'string' 
-          ? parseInt(payload.targetUserId, 10) 
-          : payload.targetUserId; // Ép kiểu nếu cần
+    // async handleAnswer(client: Socket, payload: { answer: RTCSessionDescriptionInit, targetUserId: number|string }) {
+    //     const targetUserId = typeof payload.targetUserId === 'string' 
+    //       ? parseInt(payload.targetUserId, 10) 
+    //       : payload.targetUserId; // Ép kiểu nếu cần
 
-        const targetSocketIds = this.userSockets.get(targetUserId);
-        // this.logState();
-        // console.log(payload.targetUserId, typeof payload.targetUserId); // Debug kiểu gốc
-        // console.log(targetUserId, typeof targetUserId, targetSocketIds); // Debug sau ép kiểu 
+    //     const targetSocketIds = this.userSockets.get(targetUserId);
+    //     // this.logState();
+    //     // console.log(payload.targetUserId, typeof payload.targetUserId); // Debug kiểu gốc
+    //     // console.log(targetUserId, typeof targetUserId, targetSocketIds); // Debug sau ép kiểu 
     
-        if (targetSocketIds && targetSocketIds.size > 0) {
-            const validSocketIds = Array.from(targetSocketIds).filter(
-                (id) => this.server.sockets.sockets.has(id)
-            );
+    //     if (targetSocketIds && targetSocketIds.size > 0) {
+    //         const validSocketIds = Array.from(targetSocketIds).filter(
+    //             (id) => this.server.sockets.sockets.has(id)
+    //         );
     
-            this.logger.log(`SocketId hợp lệ cho userId ${payload.targetUserId}: ${JSON.stringify(validSocketIds)}`);
+    //         this.logger.log(`SocketId hợp lệ cho userId ${payload.targetUserId}: ${JSON.stringify(validSocketIds)}`);
     
-            if (validSocketIds.length > 0) {
-                validSocketIds.forEach((socketId) => {
-                    this.server.to(socketId).emit('answer', {
-                        answer: payload.answer,
-                    });
-                    this.logger.log(`Gửi 'answer' tới socketId: ${socketId}`);
-                });
-            } else {
-                this.logger.warn(`Không tìm thấy socket hợp lệ cho userId ${payload.targetUserId}`);
-            }
-        } else {
-            this.logger.warn(`Không tìm thấy socket cho userId ${payload.targetUserId}`);
-        }
-        // const allSockets = Array.from(this.server.sockets.sockets.keys());
-        // this.logger.log(`Tất cả socketId hiện tại trên server: ${JSON.stringify(allSockets)}`);
+    //         if (validSocketIds.length > 0) {
+    //             validSocketIds.forEach((socketId) => {
+    //                 this.server.to(socketId).emit('answer', {
+    //                     answer: payload.answer,
+    //                 });
+    //                 this.logger.log(`Gửi 'answer' tới socketId: ${socketId}`);
+    //             });
+    //         } else {
+    //             this.logger.warn(`Không tìm thấy socket hợp lệ cho userId ${payload.targetUserId}`);
+    //         }
+    //     } else {
+    //         this.logger.warn(`Không tìm thấy socket cho userId ${payload.targetUserId}`);
+    //     }
+    //     // const allSockets = Array.from(this.server.sockets.sockets.keys());
+    //     // this.logger.log(`Tất cả socketId hiện tại trên server: ${JSON.stringify(allSockets)}`);
+    // }
+    handleAnswer(client: Socket, payload: { answer: RTCSessionDescriptionInit; room: string; senderId: string }) {
+      const { room, senderId } = payload;
+      this.logger.log(`Nhận 'answer' từ client ${client.id} và phát trong room: ${room}`);
+      this.server.to(room).emit('answer', { answer: payload.answer });
     }
-    
   
     /**
      * Xử lý sự kiện WebRTC ICE Candidate
      */
     @SubscribeMessage('ice-candidate')
-    async handleIceCandidate(client: Socket, payload: { candidate: RTCIceCandidate, targetUserId: number|string, senderUserId: string|number }) {
-      const targetUserId = typeof payload.targetUserId === 'string'
-      ? parseInt(payload.targetUserId, 10)
-      : payload.targetUserId;
+    // async handleIceCandidate(client: Socket, payload: { candidate: RTCIceCandidate, targetUserId: number|string, senderUserId: string|number }) {
+    //   const targetUserId = typeof payload.targetUserId === 'string'
+    //   ? parseInt(payload.targetUserId, 10)
+    //   : payload.targetUserId;
 
-      const targetSocketIds = this.userSockets.get(targetUserId);
+    //   const targetSocketIds = this.userSockets.get(targetUserId);
 
-      if (targetSocketIds && targetSocketIds.size > 0) {
-          this.logger.log(`Nhận 'ice-candidate' từ client ${client.id}, phát đến userId ${payload.targetUserId}`);
+    //   if (targetSocketIds && targetSocketIds.size > 0) {
+    //       this.logger.log(`Nhận 'ice-candidate' từ client ${client.id}, phát đến userId ${payload.targetUserId}`);
           
-          targetSocketIds.forEach(targetSocketId => {
-              this.server.to(targetSocketId).emit('ice-candidate', {
-                  candidate: payload.candidate,
-                  senderUserId: payload.senderUserId,
-              });
-          });
-      } else {
-          this.logger.warn(`Không tìm thấy socket cho userId ${payload.targetUserId}`);
-      }
-    }    
+    //       targetSocketIds.forEach(targetSocketId => {
+    //           this.server.to(targetSocketId).emit('ice-candidate', {
+    //               candidate: payload.candidate,
+    //               senderUserId: payload.senderUserId,
+    //           });
+    //       });
+    //   } else {
+    //       this.logger.warn(`Không tìm thấy socket cho userId ${payload.targetUserId}`);
+    //   }
+    // }    
+
+    handleIceCandidate(client: Socket, payload: { candidate: RTCIceCandidate; room: string; senderId: string }) {
+      const { room, senderId } = payload;
+      this.logger.log(`Nhận 'ice-candidate' từ client ${client.id} và phát trong room: ${room}`);
+      this.server.to(room).emit('ice-candidate', { candidate: payload.candidate });
+    }
 
   /**
    * Gửi thông báo tới một người dùng cụ thể

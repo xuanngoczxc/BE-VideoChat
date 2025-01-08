@@ -11,7 +11,7 @@ export class User {
     @AutoMap()
     id: number;
 
-    @Column()
+    @Column({ unique: true, nullable: false})
     @AutoMap()
     loginName: string
 
