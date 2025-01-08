@@ -23,19 +23,25 @@ export class WebRTCController {
   async saveAttendance(@Body() attendanceData: AttendanceDto[]) {
     // console.log(attendanceData)
     // Kiểm tra dữ liệu đầu vào
-    if (!Array.isArray(attendanceData) || attendanceData.length <= 1) {
+    if (!Array.isArray(attendanceData) || attendanceData.length === 0) {
       throw new BadRequestException('Dữ liệu điểm danh không hợp lệ hoặc rỗng.');
     }
 
-    // Loại bỏ dòng đầu tiên (tiêu đề) và cột đầu tiên (STT)
-    // const formattedData = attendanceData.slice(1).map((row) => row.slice(1));
-
-    // Gọi service để lưu dữ liệu
     try {
       await this.classService.saveAttendanceData(attendanceData);
       return { message: 'Dữ liệu điểm danh đã được lưu thành công' };
     } catch (error) {
       throw new BadRequestException(`Lỗi khi lưu dữ liệu: ${error.message}`);
+    }
+  }
+
+  @Post('history-call')
+  async saveHistoryCall(@Body() body: any) {
+    try {
+      await this.classService.saveHistoryCall(body);  
+      return { message: 'Lịch sử cuộc gọi đã được lưu thành công.' };
+    } catch (error) {
+      return { message: 'Lỗi khi lưu lịch sử cuộc gọi.', error: error.message };
     }
   }
 

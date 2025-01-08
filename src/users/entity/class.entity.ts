@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, JoinColumn, OneToOne } from 'typeorm';
 import { User } from './user.entity';
 import { DiemDanh } from './rollcall.entity';
 import { LichSuCuocGoi } from './history.entity';
@@ -24,6 +24,6 @@ export class LopHoc {
   @OneToMany(() => DiemDanh, diemDanh => diemDanh.lopHoc)
   diemDanhs: DiemDanh[];
 
-  @OneToMany(() => LichSuCuocGoi, lichSuCuocGoi => lichSuCuocGoi.lopHoc)
-  lichSuCuocGois: LichSuCuocGoi[];
+  @OneToOne(() => LichSuCuocGoi, lichSuCuocGoi => lichSuCuocGoi.lopHoc)
+  lichSuCuocGois: LichSuCuocGoi;
 }

@@ -30,7 +30,7 @@ import { DiemDanh } from './users/entity/rollcall.entity';
       host: 'localhost',
       port: 5432,
       username: 'postgres',
-      password: '12345',
+      password: 'Anhvu123@',
       database: 'videoChat',
       entities: [User, LopHoc, LichSuCuocGoi, ThongTinCaNhan, DiemDanh],
       synchronize: true,
